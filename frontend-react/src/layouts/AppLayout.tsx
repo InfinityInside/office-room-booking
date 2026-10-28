@@ -1,10 +1,19 @@
-import { NavLink, Outlet } from 'react-router';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router';
+import { useAuth } from '../auth/AuthContext.ts';
 
 const linkStyle = ({ isActive }: { isActive: boolean }) => ({
     fontWeight: isActive ? 'bold' : 'normal',
 });
 
 export function AppLayout() {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    function handleLogout() {
+        logout();
+        navigate('/');
+    }
+
     return (
         <>
             <header>
@@ -38,6 +47,18 @@ export function AppLayout() {
                         </li>
                     </ul>
                 </nav>
+                {user ? (
+                    <p>
+                        Logged in as {user.firstName} {user.lastName}
+                        <button onClick={handleLogout}>
+                            Log out
+                        </button>
+                    </p>
+                ) : (
+                    <p>
+                        <Link to="/login">Log in</Link>
+                    </p>
+                )}
             </header>
             <hr />
             <main>

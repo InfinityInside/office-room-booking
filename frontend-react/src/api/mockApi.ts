@@ -209,3 +209,17 @@ export const getRoom = (id: number) => rooms.find((r) => r.id === id);
 
 export const getBookings = () => [...bookings];
 export const getBookingsForUser = (userId: number) => bookings.filter((b) => b.userId === userId);
+
+// ---------- Auth ----------
+
+const findUserByEmail = (email: string) =>
+    users.find((u) => u.email.toLowerCase() === email.trim().toLowerCase());
+
+/** Mock login: any non-empty password works for an active user. */
+export function login(email: string, password: string): User | null {
+    const user = findUserByEmail(email);
+    if (!user || !user.active || password.length === 0) {
+        return null;
+    }
+    return user;
+}
