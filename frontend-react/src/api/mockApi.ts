@@ -3,6 +3,7 @@
 
 import type { Booking, EquipmentType, Grant, Room, User } from '../types';
 import { addDays, combine, todayInput } from '../utils/time';
+import { SYSTEM_GRANTS } from '../grants.ts';
 
 // Seed bookings are relative to today, so the demo always has upcoming bookings.
 const today = todayInput();
@@ -222,4 +223,12 @@ export function login(email: string, password: string): User | null {
         return null;
     }
     return user;
+}
+
+/** True if the user holds an active grant with this code. */
+export function hasGrant(user: User, code: string): boolean {
+    return user.grantIds.some((id) => {
+        const grant = getGrant(id);
+        return grant?.code === SYSTEM_GRANTS.ADMIN || grant?.code === code && grant.active;
+    });
 }

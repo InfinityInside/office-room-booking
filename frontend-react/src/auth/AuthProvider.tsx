@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import * as api from '../api/mockApi';
 import { AuthContext } from './AuthContext';
+import type { SystemGrantCode } from '../grants.ts';
 
 interface AuthProviderProps {
     children: ReactNode;
@@ -22,5 +23,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUserId(null);
     }
 
-    return <AuthContext value={{ user, login, logout }}>{children}</AuthContext>;
+    function hasGrant(code: SystemGrantCode): boolean {
+        return user !== null && api.hasGrant(user, code);
+    }
+
+    const value = { user, hasGrant, login, logout };
+
+    return <AuthContext value={value}>{children}</AuthContext>;
 }

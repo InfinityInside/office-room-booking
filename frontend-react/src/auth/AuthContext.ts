@@ -1,8 +1,10 @@
 import { createContext, useContext } from 'react';
 import type { User } from '../types';
+import type { SystemGrantCode } from '../grants.ts';
 
 export interface AuthContextValue {
     user: User | null;
+    hasGrant: (code: SystemGrantCode) => boolean;
     login: (email: string, password: string) => boolean;
     logout: () => void;
 }

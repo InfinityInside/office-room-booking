@@ -1,10 +1,17 @@
 import { useAuth } from '../auth/AuthContext.ts';
-import { Link, useNavigate } from 'react-router';
+import { Link, useLocation, useNavigate } from 'react-router';
 import { useState, type SubmitEvent } from 'react';
 
 export function LoginPage() {
-    const { login } = useAuth();
+    const { login, user } = useAuth();
     const navigate = useNavigate();
+    const location = useLocation();
+    // Where the user tried to go before RequireAuth sent them here.
+    const from = (location.state as { from?: string } | null)?.from ?? '/';
+
+    if (user) {
+        navigate(from, { replace: true });
+    }
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
@@ -16,7 +23,7 @@ export function LoginPage() {
             setError('Wrong email or password.');
             return;
         }
-        navigate('/');
+        navigate(from, { replace: true});
     }
 
     return (
