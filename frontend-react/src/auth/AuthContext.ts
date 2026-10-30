@@ -6,7 +6,15 @@ export interface AuthContextValue {
     user: User | null;
     hasGrant: (code: SystemGrantCode) => boolean;
     login: (email: string, password: string) => boolean;
+    register: (input: RegisterInput) => void;
     logout: () => void;
+}
+
+export interface RegisterInput {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
 }
 
 export const AuthContext = createContext<AuthContextValue | null>(null);

@@ -194,6 +194,9 @@ const bookings: Booking[] = [
     },
 ];
 
+// Ids for records created while the app runs. Seed data uses 1–99.
+let nextId = 100;
+
 // ---------- Read functions ----------
 
 export const getGrants = () => [...grants];
@@ -222,6 +225,29 @@ export function login(email: string, password: string): User | null {
     if (!user || !user.active || password.length === 0) {
         return null;
     }
+    return user;
+}
+
+export interface NewUser {
+    firstName: string;
+    lastName: string;
+    email: string;
+}
+
+export function register(input: NewUser): User {
+    if (findUserByEmail(input.email)) {
+        throw new Error('An account with this email already exists.');
+    }
+
+    const user: User = {
+        id: nextId++,
+        firstName: input.firstName.trim(),
+        lastName: input.lastName.trim(),
+        email: input.email.trim(),
+        active: true,
+        grantIds: [],
+    };
+    users.push(user);
     return user;
 }
 
