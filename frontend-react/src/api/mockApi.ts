@@ -2,8 +2,9 @@
 // Pages only use the exported functions, never the arrays directly.
 
 import type { Booking, EquipmentType, Grant, Room, User } from '../types';
-import { addDays, combine, overlaps, todayInput } from '../utils/time';
+import { addDays, combine, overlaps, timeToMinutes, todayInput } from '../utils/time';
 import { SYSTEM_GRANTS } from '../grants.ts';
+import {BOOKING_RULES} from "../bookingRules.ts";
 
 // Seed bookings are relative to today, so the demo always has upcoming bookings.
 const today = todayInput();
@@ -287,4 +288,91 @@ export function canBookRoom(user: User, room: Room): boolean {
         return true;
     }
     return room.grantIds.some((id) => user.grantIds.includes(id) && getGrant(id)?.active === true);
+}
+
+// ---------- Creating bookings ----------
+
+/** Returns an error message, or null when the times follow the booking rules. */
+export function validateBookingTimes(start: Date, end: Date): string | null {
+    const { openTime, closeTime, stepMinutes, minMinutes, maxMinutes, maxDaysAhead } = BOOKING_RULES;
+
+    if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
+        return 'Enter a valid date and time.';
+    }
+    if (end <= start) {
+        return 'End time must be after start time.';
+    }
+    if (start < new Date()) {
+        return 'You cannot book in the past.';
+    }
+
+    const latest = new Date();
+    latest.setDate(latest.getDate() + maxDaysAhead);
+    if (start > latest) {
+        return `You can book at most ${maxDaysAhead} days ahead.`;
+    }
+
+    const startMinutes = start.getHours() * 60 + start.getMinutes();
+    const endMinutes = end.getHours() * 60 + end.getMinutes();
+
+    if (startMinutes < timeToMinutes(openTime) || endMinutes > timeToMinutes(closeTime)) {
+        return `Bookings must be between ${openTime} and ${closeTime}.`;
+    }
+    if (startMinutes % stepMinutes !== 0 || endMinutes % stepMinutes !== 0) {
+        return `Times must be in ${stepMinutes}-minute steps.`;
+    }
+
+    const duration = endMinutes - startMinutes;
+    if (duration < minMinutes) {
+        return `A booking must last at least ${minMinutes} minutes.`;
+    }
+    if (duration > maxMinutes) {
+        return `A booking can last at most ${maxMinutes / 60} hours.`;
+    }
+    return null;
+}
+
+export interface NewBooking {
+    roomId: number;
+    title: string;
+    description: string;
+    date: string; // "YYYY-MM-DD"
+    startTime: string; // "HH:mm"
+    endTime: string; // "HH:mm"
+}
+
+export function createBooking(input: NewBooking, user: User): Booking {
+    const room = getRoom(input.roomId);
+    if (!room || !canBookRoom(user, room)) {
+        throw new Error("This room doesn't exist or you don't have access to it.");
+    }
+    if (!input.title.trim()) {
+        throw new Error('Title is required.');
+    }
+
+    const start = combine(input.date, input.startTime);
+    const end = combine(input.date, input.endTime);
+
+    const ruleError = validateBookingTimes(start, end);
+    if (ruleError) {
+        throw new Error(ruleError);
+    }
+    // The real backend will answer 409 Conflict here.
+    if (!isRoomFree(room.id, start, end)) {
+        throw new Error('This room is already booked at that time.');
+    }
+
+    const booking: Booking = {
+        id: nextId++,
+        roomId: room.id,
+        userId: user.id,
+        title: input.title.trim(),
+        description: input.description.trim(),
+        start: start.toISOString(),
+        end: end.toISOString(),
+        status: 'CONFIRMED',
+        createdAt: new Date().toISOString(),
+    };
+    bookings.push(booking);
+    return booking;
 }

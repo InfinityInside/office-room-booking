@@ -25,3 +25,28 @@ export function addDays(dateInput: string, days: number): string {
 export function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
     return aStart < bEnd && bStart < aEnd;
 }
+
+/** "09:30" -> 570 (minutes since midnight) */
+export function timeToMinutes(time: string): number {
+    const [hours, minutes] = time.split(':').map(Number);
+    return hours * 60 + minutes;
+}
+
+/** 570 -> "09:30" */
+export function minutesToTime(totalMinutes: number): string {
+    return `${pad(Math.floor(totalMinutes / 60))}:${pad(totalMinutes % 60)}`;
+}
+
+/** "09:30" + 30 -> "10:00" (negative minutes go back in time) */
+export function addMinutesToTime(time: string, minutes: number): string {
+    return minutesToTime(timeToMinutes(time) + minutes);
+}
+
+/** All times from `from` to `to`, inclusive: ("07:00", "08:00", 30) -> ["07:00", "07:30", "08:00"] */
+export function timeOptions(from: string, to: string, stepMinutes: number): string[] {
+    const options: string[] = [];
+    for (let m = timeToMinutes(from); m <= timeToMinutes(to); m += stepMinutes) {
+        options.push(minutesToTime(m));
+    }
+    return options;
+}
