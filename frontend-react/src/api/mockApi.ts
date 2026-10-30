@@ -2,7 +2,7 @@
 // Pages only use the exported functions, never the arrays directly.
 
 import type { Booking, EquipmentType, Grant, Room, User } from '../types';
-import { addDays, combine, todayInput } from '../utils/time';
+import { addDays, combine, overlaps, todayInput } from '../utils/time';
 import { SYSTEM_GRANTS } from '../grants.ts';
 
 // Seed bookings are relative to today, so the demo always has upcoming bookings.
@@ -214,6 +214,16 @@ export const getRoom = (id: number) => rooms.find((r) => r.id === id);
 export const getBookings = () => [...bookings];
 export const getBookingsForUser = (userId: number) => bookings.filter((b) => b.userId === userId);
 
+/** True if no confirmed booking of the room overlaps the given time range. */
+export function isRoomFree(roomId: number, start: Date, end: Date): boolean {
+    return !bookings.some(
+        (b) =>
+            b.roomId === roomId &&
+            b.status === 'CONFIRMED' &&
+            overlaps(new Date(b.start), new Date(b.end), start, end),
+    );
+}
+
 // ---------- Auth ----------
 
 const findUserByEmail = (email: string) =>
@@ -257,4 +267,24 @@ export function hasGrant(user: User, code: string): boolean {
         const grant = getGrant(id);
         return grant?.code === SYSTEM_GRANTS.ADMIN || grant?.code === code && grant.active;
     });
+}
+
+/**
+ * Who may book a room:
+ * - inactive rooms: nobody
+ * - admins: every active room
+ * - open rooms (no grants linked): everyone
+ * - restricted rooms: holders of any one of the linked, active grants
+ */
+export function canBookRoom(user: User, room: Room): boolean {
+    if (!room.active) {
+        return false;
+    }
+    if (hasGrant(user, SYSTEM_GRANTS.ADMIN)) {
+        return true;
+    }
+    if (room.grantIds.length === 0) {
+        return true;
+    }
+    return room.grantIds.some((id) => user.grantIds.includes(id) && getGrant(id)?.active === true);
 }

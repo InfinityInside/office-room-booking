@@ -27,3 +27,13 @@ export function useAuth(): AuthContextValue {
     }
     return value;
 }
+
+export function useCurrentUser(): User {
+    const { user } = useAuth();
+
+    if (!user) {
+        throw new Error('useCurrentUser must be used inside <AuthProvider>');
+    }
+
+    return user;
+}

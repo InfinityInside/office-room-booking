@@ -1,5 +1,5 @@
 import { NavLink, Outlet, useNavigate } from 'react-router';
-import { useAuth } from '../auth/AuthContext.ts';
+import { useAuth, useCurrentUser } from '../auth/AuthContext.ts';
 import { SYSTEM_GRANTS } from '../grants.ts';
 
 const linkStyle = ({ isActive }: { isActive: boolean }) => ({
@@ -7,12 +7,9 @@ const linkStyle = ({ isActive }: { isActive: boolean }) => ({
 });
 
 export function AppLayout() {
-    const { user, logout, hasGrant } = useAuth();
+    const { logout, hasGrant } = useAuth();
     const navigate = useNavigate();
-
-    if (!user) {
-        return;
-    }
+    const user = useCurrentUser();
 
     function handleLogout() {
         logout();

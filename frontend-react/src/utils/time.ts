@@ -20,3 +20,8 @@ export function addDays(dateInput: string, days: number): string {
     date.setDate(date.getDate() + days);
     return toDateInput(date);
 }
+
+/** Two time ranges overlap if each one starts before the other ends. */
+export function overlaps(aStart: Date, aEnd: Date, bStart: Date, bEnd: Date): boolean {
+    return aStart < bEnd && bStart < aEnd;
+}
