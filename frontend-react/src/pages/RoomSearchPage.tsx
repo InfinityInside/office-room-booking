@@ -10,6 +10,10 @@ import { useState } from 'react';
 import { combine, todayInput } from '../utils/time.ts';
 import { toggleItem } from '../utils/list.ts';
 import { Link } from 'react-router';
+import type { Booking, Room } from '../types.ts';
+import { TimeSelect } from './TimeSelect.tsx';
+import { END_TIMES, START_TIMES } from '../bookingRules.ts';
+import { BookingForm } from './BookingForm.tsx';
 
 export function RoomSearchPage() {
     const user = useCurrentUser();
@@ -21,6 +25,9 @@ export function RoomSearchPage() {
     const [minCapacity, setMinCapacity] = useState(1);
     const [floor, setFloor] = useState(''); // '' = any floor
     const [equipmentIds, setEquipmentIds] = useState<number[]>([]);
+
+    const [bookingRoom, setBookingRoom] = useState<Room | null>(null); // null = form closed
+    const [message, setMessage] = useState<string | null>(null);
 
     // ----- Derived values: recalculated on every render -----
     const accessibleRooms = getRooms().filter((room) => canBookRoom(user, room));
@@ -38,6 +45,10 @@ export function RoomSearchPage() {
             equipmentIds.every((id) => room.equipmentIds.includes(id)),
     );
 
+    function isBookable(roomId: number): boolean {
+        return validRange && !isPast && isRoomFree(roomId, start, end);
+    }
+
     function availability(roomId: number): string {
         if (!validRange) {
             return '—';
@@ -46,6 +57,16 @@ export function RoomSearchPage() {
             return 'In the past';
         }
         return isRoomFree(roomId, start, end) ? 'Free' : 'Booked';
+    }
+
+    function handleBookClick(room: Room) {
+        setMessage(null);
+        setBookingRoom(room);
+    }
+
+    function handleBooked(booking: Booking) {
+        setMessage(`Booked "${booking.title}" in ${bookingRoom?.name}.`);
+        setBookingRoom(null);
     }
 
     return (
@@ -60,22 +81,14 @@ export function RoomSearchPage() {
                     </label>{' '}
                     <label>
                         From{' '}
-                        <input
-                            type="time"
-                            step={900}
+                        <TimeSelect
                             value={startTime}
-                            onChange={(e) => setStartTime(e.target.value)}
+                            options={START_TIMES}
+                            onChange={setStartTime}
                         />
                     </label>{' '}
                     <label>
-                        To{' '}
-                        <input
-                            type="time"
-                            step={900}
-                            value={endTime}
-                            min={startTime}
-                            onChange={(e) => setEndTime(e.target.value)}
-                        />
+                        To <TimeSelect value={endTime} options={END_TIMES} onChange={setEndTime} />
                     </label>
                 </p>
                 <p>
@@ -118,6 +131,19 @@ export function RoomSearchPage() {
             </fieldset>
 
             {!validRange && <p role="alert">End time must be after start time.</p>}
+            {message && <p role="status">{message}</p>}
+
+            {bookingRoom && (
+                <BookingForm
+                    key={`${bookingRoom.id}-${date}-${startTime}-${endTime}`}
+                    room={bookingRoom}
+                    initialDate={date}
+                    initialStartTime={startTime}
+                    initialEndTime={endTime}
+                    onBooked={handleBooked}
+                    onCancel={() => setBookingRoom(null)}
+                />
+            )}
 
             {results.length === 0 ? (
                 <p>No rooms match your filters. Try a lower capacity or fewer equipment options.</p>
@@ -149,6 +175,13 @@ export function RoomSearchPage() {
                                 </td>
                                 <td>{availability(room.id)}</td>
                                 <td>
+                                    <button
+                                        type="button"
+                                        disabled={!isBookable(room.id)}
+                                        onClick={() => handleBookClick(room)}
+                                    >
+                                        Book
+                                    </button>{' '}
                                     <Link to={`/rooms/${room.id}`}>Details</Link>
                                 </td>
                             </tr>
