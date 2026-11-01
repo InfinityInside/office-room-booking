@@ -50,3 +50,13 @@ export function timeOptions(from: string, to: string, stepMinutes: number): stri
     }
     return options;
 }
+
+/** "2026-10-30" -> "Friday, 30 October 2026" */
+export function formatLongDate(dateInput: string): string {
+    return combine(dateInput, '12:00').toLocaleDateString('en-GB', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+    });
+}

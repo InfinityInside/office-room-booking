@@ -225,6 +225,18 @@ export function isRoomFree(roomId: number, start: Date, end: Date): boolean {
     );
 }
 
+/** Confirmed bookings of a room that overlap the given day ("YYYY-MM-DD", local time). */
+export function getBookingsForRoom(roomId: number, date: string): Booking[] {
+    const dayStart = combine(date, '00:00');
+    const dayEnd = combine(addDays(date, 1), '00:00');
+    return bookings.filter(
+        (b) =>
+            b.roomId === roomId &&
+            b.status === 'CONFIRMED' &&
+            overlaps(new Date(b.start), new Date(b.end), dayStart, dayEnd),
+    );
+}
+
 // ---------- Auth ----------
 
 const findUserByEmail = (email: string) =>
