@@ -62,7 +62,7 @@ export function RegisterPage() {
                 email: form.email,
                 password: form.password,
             });
-            navigate('/rooms', { replace: true });
+            navigate('/', { replace: true });
         } catch (e) {
             setError(e instanceof Error ? e.message : 'Registration failed.');
         }

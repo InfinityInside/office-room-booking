@@ -1,21 +1,20 @@
 import { useAuth } from '../auth/AuthContext.ts';
-import { Link, useLocation, useNavigate } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 import { useState, type SubmitEvent } from 'react';
 
 export function LoginPage() {
     const { login, user } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
-    // Where the user tried to go before RequireAuth sent them here.
     const from = (location.state as { from?: string } | null)?.from ?? '/';
-
-    if (user) {
-        navigate(from, { replace: true });
-    }
 
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState<string | null>(null);
+
+    if (user) {
+        return <Navigate to={from} replace />;
+    }
 
     function handleSubmit(event: SubmitEvent<HTMLFormElement>) {
         event.preventDefault();
