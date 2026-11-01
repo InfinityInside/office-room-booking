@@ -60,3 +60,17 @@ export function formatLongDate(dateInput: string): string {
         year: 'numeric',
     });
 }
+
+/** ISO string -> "30/10/2026" */
+export function formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('en-GB');
+}
+
+/** ISO string -> "09:30", always 24-hour */
+export function formatTime(iso: string): string {
+    return new Date(iso).toLocaleTimeString('en-GB', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hourCycle: 'h23',
+    });
+}

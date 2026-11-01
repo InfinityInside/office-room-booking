@@ -388,3 +388,22 @@ export function createBooking(input: NewBooking, user: User): Booking {
     bookings.push(booking);
     return booking;
 }
+
+// ---------- Cancelling bookings ----------
+
+/** Owners and admins may cancel confirmed bookings that haven't started yet. */
+export function canCancelBooking(user: User, booking: Booking): boolean {
+    const isOwnerOrAdmin = booking.userId === user.id || hasGrant(user, SYSTEM_GRANTS.ADMIN);
+    return isOwnerOrAdmin && booking.status === 'CONFIRMED' && new Date(booking.start) > new Date();
+}
+
+export function cancelBooking(bookingId: number, user: User): void {
+    const booking = bookings.find((b) => b.id === bookingId);
+    if (!booking) {
+        throw new Error('Booking not found.');
+    }
+    if (!canCancelBooking(user, booking)) {
+        throw new Error('This booking cannot be cancelled.');
+    }
+    booking.status = 'CANCELLED';
+}
