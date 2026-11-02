@@ -13,7 +13,7 @@ import { Link } from 'react-router';
 import type { Booking, Room } from '../types.ts';
 import { TimeSelect } from './TimeSelect.tsx';
 import { END_TIMES, START_TIMES } from '../bookingRules.ts';
-import { BookingForm } from './BookingForm.tsx';
+import { BookingForm } from '../components/BookingForm.tsx';
 
 export function RoomSearchPage() {
     const user = useCurrentUser();

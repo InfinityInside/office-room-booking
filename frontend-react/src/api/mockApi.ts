@@ -407,3 +407,51 @@ export function cancelBooking(bookingId: number, user: User): void {
     }
     booking.status = 'CANCELLED';
 }
+
+// ---------- Managing rooms (admin) ----------
+
+/** A room as entered in the form, before it has an id. */
+export type RoomInput = Omit<Room, 'id'>;
+
+/** Creates a room when id is undefined, otherwise updates that room. Admin only. */
+export function saveRoom(user: User, input: RoomInput, id?: number): Room {
+    if (!hasGrant(user, SYSTEM_GRANTS.ADMIN)) {
+        throw new Error("You don't have permission to manage rooms.");
+    }
+
+    const name = input.name.trim();
+    if (!name) {
+        throw new Error('Name is required.');
+    }
+    if (rooms.some((r) => r.id !== id && r.name.toLowerCase() === name.toLowerCase())) {
+        throw new Error('Another room already has this name.');
+    }
+    if (!Number.isInteger(input.floor)) {
+        throw new Error('Floor must be a whole number.');
+    }
+    if (!Number.isInteger(input.capacity) || input.capacity < 1) {
+        throw new Error('Capacity must be a whole number of at least 1.');
+    }
+    if (input.equipmentIds.some((eid) => !getEquipmentType(eid))) {
+        throw new Error('Unknown equipment type.');
+    }
+    if (input.grantIds.some((gid) => getGrant(gid)?.type !== 'ROOM_ACCESS')) {
+        throw new Error('Only room-access grants can be linked to rooms.');
+    }
+
+    const data: RoomInput = { ...input, name, description: input.description.trim() };
+
+    if (id === undefined) {
+        const created: Room = { ...data, id: nextId++ };
+        rooms.push(created);
+        return created;
+    }
+
+    const index = rooms.findIndex((r) => r.id === id);
+    if (index === -1) {
+        throw new Error('Room not found.');
+    }
+    const updated: Room = { ...data, id };
+    rooms[index] = updated;
+    return updated;
+}

@@ -13,7 +13,7 @@ import { useCurrentUser } from '../auth/AuthContext.ts';
 import { type ReactNode, useState } from 'react';
 import { canBookRoom, getBookingsForRoom, getEquipmentType, getRoom } from '../api/mockApi.ts';
 import type { Booking } from '../types.ts';
-import { BookingForm } from './BookingForm.tsx';
+import { BookingForm } from '../components/BookingForm.tsx';
 
 const SLOT_MINUTES = 15;
 
