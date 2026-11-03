@@ -4,7 +4,7 @@
 import type { Booking, EquipmentType, Grant, Room, User } from '../types';
 import { addDays, combine, overlaps, timeToMinutes, todayInput } from '../utils/time';
 import { SYSTEM_GRANTS } from '../grants.ts';
-import {BOOKING_RULES} from "../bookingRules.ts";
+import { BOOKING_RULES } from '../bookingRules.ts';
 
 // Seed bookings are relative to today, so the demo always has upcoming bookings.
 const today = todayInput();
@@ -212,7 +212,12 @@ export const getEquipmentType = (id: number) => equipmentTypes.find((e) => e.id 
 export const getRooms = () => [...rooms];
 export const getRoom = (id: number) => rooms.find((r) => r.id === id);
 
-export const getBookings = () => [...bookings];
+/** Every booking, for the admin overview. Admin only. */
+export function getAllBookings(user: User): Booking[] {
+    requireAdmin(user);
+    return [...bookings];
+}
+
 export const getBookingsForUser = (userId: number) => bookings.filter((b) => b.userId === userId);
 
 /** True if no confirmed booking of the room overlaps the given time range. */
@@ -278,7 +283,7 @@ export function register(input: NewUser): User {
 export function hasGrant(user: User, code: string): boolean {
     return user.grantIds.some((id) => {
         const grant = getGrant(id);
-        return grant?.code === SYSTEM_GRANTS.ADMIN || grant?.code === code && grant.active;
+        return grant?.code === SYSTEM_GRANTS.ADMIN || (grant?.code === code && grant.active);
     });
 }
 
@@ -313,7 +318,8 @@ export function canBookRoom(user: User, room: Room): boolean {
 
 /** Returns an error message, or null when the times follow the booking rules. */
 export function validateBookingTimes(start: Date, end: Date): string | null {
-    const { openTime, closeTime, stepMinutes, minMinutes, maxMinutes, maxDaysAhead } = BOOKING_RULES;
+    const { openTime, closeTime, stepMinutes, minMinutes, maxMinutes, maxDaysAhead } =
+        BOOKING_RULES;
 
     if (Number.isNaN(start.getTime()) || Number.isNaN(end.getTime())) {
         return 'Enter a valid date and time.';
@@ -530,7 +536,9 @@ export function deleteEquipmentType(user: User, id: number): void {
     }
     const usedBy = countRoomsWithEquipment(id);
     if (usedBy > 0) {
-        throw new Error(`This type is still assigned to ${usedBy} room(s). Remove it from them first.`);
+        throw new Error(
+            `This type is still assigned to ${usedBy} room(s). Remove it from them first.`,
+        );
     }
 
     equipmentTypes.splice(index, 1);
