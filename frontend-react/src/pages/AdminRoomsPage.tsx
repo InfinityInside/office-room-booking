@@ -2,11 +2,14 @@ import { useState } from 'react';
 import type { Room } from '../types.ts';
 import { getEquipmentType, getGrant, getRooms } from '../api/mockApi.ts';
 import { RoomForm } from '../components/RoomForm.tsx';
+import { useRefresh } from '../hooks/useRefresh.ts';
+import { EquipmentTypesSection } from '../components/EquipmentTypesSection.tsx';
 
 export function AdminRoomsPage() {
     // null = no form open, 'new' = adding a room, a Room = editing that room
     const [editing, setEditing] = useState<Room | 'new' | null>(null);
     const [message, setMessage] = useState<string | null>(null);
+    const refresh = useRefresh();
 
     // ----- Derived values -----
     const rooms = getRooms().sort((a, b) => a.floor - b.floor || a.name.localeCompare(b.name));
@@ -80,6 +83,8 @@ export function AdminRoomsPage() {
                     ))}
                 </tbody>
             </table>
+
+            <EquipmentTypesSection onChanged={refresh} />
         </>
     );
 }

@@ -282,6 +282,13 @@ export function hasGrant(user: User, code: string): boolean {
     });
 }
 
+/** Throws unless the user is an admin. Used by every admin-only operation. */
+function requireAdmin(user: User): void {
+    if (!hasGrant(user, SYSTEM_GRANTS.ADMIN)) {
+        throw new Error("You don't have permission to do this.");
+    }
+}
+
 /**
  * Who may book a room:
  * - inactive rooms: nobody
@@ -415,9 +422,7 @@ export type RoomInput = Omit<Room, 'id'>;
 
 /** Creates a room when id is undefined, otherwise updates that room. Admin only. */
 export function saveRoom(user: User, input: RoomInput, id?: number): Room {
-    if (!hasGrant(user, SYSTEM_GRANTS.ADMIN)) {
-        throw new Error("You don't have permission to manage rooms.");
-    }
+    requireAdmin(user);
 
     const name = input.name.trim();
     if (!name) {
@@ -454,4 +459,79 @@ export function saveRoom(user: User, input: RoomInput, id?: number): Room {
     const updated: Room = { ...data, id };
     rooms[index] = updated;
     return updated;
+}
+
+// ---------- Managing equipment types (admin) ----------
+
+const EQUIPMENT_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+
+/** How many rooms, active or not, have this equipment type. */
+export function countRoomsWithEquipment(equipmentId: number): number {
+    return rooms.filter((r) => r.equipmentIds.includes(equipmentId)).length;
+}
+
+const isEquipmentNameTaken = (name: string, exceptId?: number) =>
+    equipmentTypes.some((e) => e.id !== exceptId && e.name.toLowerCase() === name.toLowerCase());
+
+export function createEquipmentType(user: User, code: string, name: string): EquipmentType {
+    requireAdmin(user);
+
+    const normalizedCode = code.trim().toUpperCase();
+    const trimmedName = name.trim();
+
+    if (!EQUIPMENT_CODE_PATTERN.test(normalizedCode)) {
+        throw new Error(
+            'Code must start with a letter and contain only letters, digits and underscores.',
+        );
+    }
+    if (!trimmedName) {
+        throw new Error('Name is required.');
+    }
+    if (equipmentTypes.some((e) => e.code === normalizedCode)) {
+        throw new Error('This code is already used.');
+    }
+    if (isEquipmentNameTaken(trimmedName)) {
+        throw new Error('This name is already used.');
+    }
+
+    const created: EquipmentType = { id: nextId++, code: normalizedCode, name: trimmedName };
+    equipmentTypes.push(created);
+    return created;
+}
+
+/** Changes only the display name. The code never changes, since logic and data may rely on it. */
+export function renameEquipmentType(user: User, id: number, name: string): EquipmentType {
+    requireAdmin(user);
+
+    const index = equipmentTypes.findIndex((e) => e.id === id);
+    if (index === -1) {
+        throw new Error('Equipment type not found.');
+    }
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+        throw new Error('Name is required.');
+    }
+    if (isEquipmentNameTaken(trimmedName, id)) {
+        throw new Error('This name is already used.');
+    }
+
+    const updated: EquipmentType = { ...equipmentTypes[index], name: trimmedName };
+    equipmentTypes[index] = updated;
+    return updated;
+}
+
+/** Deletes a type, but only if no room uses it. */
+export function deleteEquipmentType(user: User, id: number): void {
+    requireAdmin(user);
+
+    const index = equipmentTypes.findIndex((e) => e.id === id);
+    if (index === -1) {
+        throw new Error('Equipment type not found.');
+    }
+    const usedBy = countRoomsWithEquipment(id);
+    if (usedBy > 0) {
+        throw new Error(`This type is still assigned to ${usedBy} room(s). Remove it from them first.`);
+    }
+
+    equipmentTypes.splice(index, 1);
 }
