@@ -279,6 +279,8 @@ export function register(input: NewUser): User {
     return user;
 }
 
+const CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
+
 /** True if the user holds an active grant with this code. */
 export function hasGrant(user: User, code: string): boolean {
     return user.grantIds.some((id) => {
@@ -469,8 +471,6 @@ export function saveRoom(user: User, input: RoomInput, id?: number): Room {
 
 // ---------- Managing equipment types (admin) ----------
 
-const EQUIPMENT_CODE_PATTERN = /^[A-Z][A-Z0-9_]*$/;
-
 /** How many rooms, active or not, have this equipment type. */
 export function countRoomsWithEquipment(equipmentId: number): number {
     return rooms.filter((r) => r.equipmentIds.includes(equipmentId)).length;
@@ -485,7 +485,7 @@ export function createEquipmentType(user: User, code: string, name: string): Equ
     const normalizedCode = code.trim().toUpperCase();
     const trimmedName = name.trim();
 
-    if (!EQUIPMENT_CODE_PATTERN.test(normalizedCode)) {
+    if (!CODE_PATTERN.test(normalizedCode)) {
         throw new Error(
             'Code must start with a letter and contain only letters, digits and underscores.',
         );
@@ -542,4 +542,91 @@ export function deleteEquipmentType(user: User, id: number): void {
     }
 
     equipmentTypes.splice(index, 1);
+}
+
+// ---------- Managing grants (admin) ----------
+
+/** How many users hold this grant. */
+export function countUsersWithGrant(grantId: number): number {
+    return users.filter((u) => u.grantIds.includes(grantId)).length;
+}
+
+/** The rooms that require this grant. */
+export function getRoomsRequiringGrant(grantId: number): Room[] {
+    return rooms.filter((r) => r.grantIds.includes(grantId));
+}
+
+/** Creates a room-access grant. System grants only exist in code, see SYSTEM_GRANTS. */
+export function createGrant(user: User, code: string, name: string, description: string): Grant {
+    requireAdmin(user);
+
+    const normalizedCode = code.trim().toUpperCase();
+    const trimmedName = name.trim();
+
+    if (!CODE_PATTERN.test(normalizedCode)) {
+        throw new Error(
+            'Code must start with a letter and contain only letters, digits and underscores.',
+        );
+    }
+    if (!trimmedName) {
+        throw new Error('Name is required.');
+    }
+    if (grants.some((g) => g.code === normalizedCode)) {
+        throw new Error('This code is already used.');
+    }
+    if (grants.some((g) => g.name.toLowerCase() === trimmedName.toLowerCase())) {
+        throw new Error('This name is already used.');
+    }
+
+    const created: Grant = {
+        id: nextId++,
+        code: normalizedCode,
+        name: trimmedName,
+        type: 'ROOM_ACCESS',
+        description: description.trim(),
+        active: true,
+    };
+    grants.push(created);
+    return created;
+}
+
+export function setGrantActive(user: User, grantId: number, active: boolean): Grant {
+    requireAdmin(user);
+
+    const index = grants.findIndex((g) => g.id === grantId);
+    if (index === -1) {
+        throw new Error('Grant not found.');
+    }
+    if (grants[index].type === 'SYSTEM') {
+        throw new Error('System grants cannot be deactivated.');
+    }
+
+    const updated: Grant = { ...grants[index], active };
+    grants[index] = updated;
+    return updated;
+}
+
+export function setUserGrant(
+    user: User,
+    targetUserId: number,
+    grantId: number,
+    granted: boolean,
+): void {
+    requireAdmin(user);
+
+    const index = users.findIndex((u) => u.id === targetUserId);
+    const grant = getGrant(grantId);
+    if (index === -1 || !grant) {
+        throw new Error('User or grant not found.');
+    }
+    // Prevent locking yourself out of the admin pages.
+    if (!granted && grant.code === SYSTEM_GRANTS.ADMIN && targetUserId === user.id) {
+        throw new Error('You cannot remove your own Admin grant.');
+    }
+
+    const target = users[index];
+    const grantIds = granted
+        ? [...new Set([...target.grantIds, grantId])]
+        : target.grantIds.filter((id) => id !== grantId);
+    users[index] = { ...target, grantIds };
 }
