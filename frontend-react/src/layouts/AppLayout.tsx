@@ -1,4 +1,4 @@
-import { NavLink, Outlet, useNavigate } from 'react-router';
+import { NavLink, Outlet, useNavigate, useNavigation } from 'react-router';
 import { useAuth, useCurrentUser } from '../auth/AuthContext.ts';
 import { SYSTEM_GRANTS } from '../grants.ts';
 
@@ -10,6 +10,7 @@ export function AppLayout() {
     const { logout, hasGrant } = useAuth();
     const navigate = useNavigate();
     const user = useCurrentUser();
+    const navigation = useNavigation();
 
     function handleLogout() {
         logout();
@@ -32,7 +33,7 @@ export function AppLayout() {
                                 My bookings
                             </NavLink>
                         </li>
-                        { hasGrant(SYSTEM_GRANTS.ADMIN) &&
+                        {hasGrant(SYSTEM_GRANTS.ADMIN) && (
                             <li>
                                 <ul>
                                     <li>
@@ -52,7 +53,7 @@ export function AppLayout() {
                                     </li>
                                 </ul>
                             </li>
-                        }
+                        )}
                     </ul>
                 </nav>
 
@@ -62,6 +63,7 @@ export function AppLayout() {
                 </p>
             </header>
             <hr />
+            {navigation.state === 'loading' && <p role="status">Loading…</p>}
             <main>
                 <Outlet />
             </main>
