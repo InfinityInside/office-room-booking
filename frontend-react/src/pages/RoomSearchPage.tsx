@@ -14,6 +14,7 @@ import type { Booking, Room } from '../types.ts';
 import { TimeSelect } from './TimeSelect.tsx';
 import { END_TIMES, START_TIMES } from '../bookingRules.ts';
 import { BookingForm } from '../components/BookingForm.tsx';
+import { Modal } from '../components/Modal.tsx';
 
 export function RoomSearchPage() {
     const user = useCurrentUser();
@@ -133,17 +134,23 @@ export function RoomSearchPage() {
             {!validRange && <p role="alert">End time must be after start time.</p>}
             {message && <p role="status">{message}</p>}
 
-            {bookingRoom && (
-                <BookingForm
-                    key={`${bookingRoom.id}-${date}-${startTime}-${endTime}`}
-                    room={bookingRoom}
-                    initialDate={date}
-                    initialStartTime={startTime}
-                    initialEndTime={endTime}
-                    onBooked={handleBooked}
-                    onCancel={() => setBookingRoom(null)}
-                />
-            )}
+            <Modal
+                open={bookingRoom !== null}
+                title={bookingRoom ? `Book ${bookingRoom.name}` : ''}
+                onClose={() => setBookingRoom(null)}
+            >
+                {bookingRoom && (
+                    <BookingForm
+                        key={`${bookingRoom.id}-${date}-${startTime}-${endTime}`}
+                        room={bookingRoom}
+                        initialDate={date}
+                        initialStartTime={startTime}
+                        initialEndTime={endTime}
+                        onBooked={handleBooked}
+                        onCancel={() => setBookingRoom(null)}
+                    />
+                )}
+            </Modal>
 
             {results.length === 0 ? (
                 <p>No rooms match your filters. Try a lower capacity or fewer equipment options.</p>

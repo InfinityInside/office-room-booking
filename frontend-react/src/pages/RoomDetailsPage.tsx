@@ -14,6 +14,7 @@ import { type ReactNode, useState } from 'react';
 import { canBookRoom, getBookingsForRoom, getEquipmentType, getRoom } from '../api/mockApi.ts';
 import type { Booking } from '../types.ts';
 import { BookingForm } from '../components/BookingForm.tsx';
+import { Modal } from '../components/Modal.tsx';
 
 const SLOT_MINUTES = 15;
 
@@ -132,17 +133,23 @@ export function RoomDetailsPage() {
 
             {message && <p role="status">{message}</p>}
 
-            {selectedSlot && (
-                <BookingForm
-                    key={`${date}-${selectedSlot}`}
-                    room={room}
-                    initialDate={date}
-                    initialStartTime={selectedSlot}
-                    initialEndTime={addMinutesToTime(selectedSlot, SLOT_MINUTES)}
-                    onBooked={handleBooked}
-                    onCancel={() => setSelectedSlot(null)}
-                />
-            )}
+            <Modal
+                open={selectedSlot !== null}
+                title={`Book ${room.name}`}
+                onClose={() => setSelectedSlot(null)}
+            >
+                {selectedSlot && (
+                    <BookingForm
+                        key={`${date}-${selectedSlot}`}
+                        room={room}
+                        initialDate={date}
+                        initialStartTime={selectedSlot}
+                        initialEndTime={addMinutesToTime(selectedSlot, SLOT_MINUTES)}
+                        onBooked={handleBooked}
+                        onCancel={() => setSelectedSlot(null)}
+                    />
+                )}
+            </Modal>
 
             <table>
                 <thead>
