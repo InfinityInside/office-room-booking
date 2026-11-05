@@ -4,6 +4,7 @@ import { getEquipmentType, getGrant, getRooms } from '../api/mockApi.ts';
 import { RoomForm } from '../components/RoomForm.tsx';
 import { useRefresh } from '../hooks/useRefresh.ts';
 import { EquipmentTypesSection } from '../components/EquipmentTypesSection.tsx';
+import { Modal } from '../components/Modal.tsx';
 
 export function AdminRoomsPage() {
     // null = no form open, 'new' = adding a room, a Room = editing that room
@@ -44,14 +45,20 @@ export function AdminRoomsPage() {
 
             {message && <p role="status">{message}</p>}
 
-            {editing && (
-                <RoomForm
-                    key={editing === 'new' ? 'new' : editing.id}
-                    room={editing === 'new' ? null : editing}
-                    onSaved={handleSaved}
-                    onCancel={() => setEditing(null)}
-                />
-            )}
+            <Modal
+                open={editing !== null}
+                title={editing === 'new' ? 'Add room' : `Edit ${editing?.name ?? ''}`}
+                onClose={() => setEditing(null)}
+            >
+                {editing && (
+                    <RoomForm
+                        key={editing === 'new' ? 'new' : editing.id}
+                        room={editing === 'new' ? null : editing}
+                        onSaved={handleSaved}
+                        onCancel={() => setEditing(null)}
+                    />
+                )}
+            </Modal>
 
             <table>
                 <thead>

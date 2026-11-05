@@ -61,8 +61,6 @@ export function RoomForm({ room, onSaved, onCancel }: RoomFormProps) {
 
     return (
         <form onSubmit={handleSubmit}>
-            <fieldset>
-                <legend>{room ? `Edit ${room.name}` : 'Add room'}</legend>
                 <p>
                     <label>
                         Name{' '}
@@ -150,7 +148,6 @@ export function RoomForm({ room, onSaved, onCancel }: RoomFormProps) {
                 <button type="button" onClick={onCancel}>
                     Cancel
                 </button>
-            </fieldset>
         </form>
     );
 }
