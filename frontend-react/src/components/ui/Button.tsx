@@ -5,8 +5,8 @@ type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
 type ButtonSize = 'md' | 'sm';
 
 const VARIANT_CLASSES: Record<ButtonVariant, string> = {
-    primary: 'bg-brand text-neutral-950 enabled:hover:bg-brand-hover',
-    secondary: 'border border-neutral-700 text-neutral-100 enabled:hover:bg-neutral-800',
+    primary: 'bg-brand text-on-brand enabled:hover:bg-brand-hover',
+    secondary: 'border border-border-strong text-neutral-100 enabled:hover:bg-neutral-800',
     danger: 'bg-red-600 text-white enabled:hover:bg-red-500',
     ghost: 'text-neutral-300 enabled:hover:bg-neutral-800 enabled:hover:text-neutral-100',
 };

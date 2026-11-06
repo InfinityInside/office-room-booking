@@ -1,8 +1,15 @@
 @import 'tailwindcss';
 
 @theme {
-    --color-brand: #f97316;
-    --color-brand-hover: #fb923c;
+    --color-brand: #f97316; /* primary orange color */
+    --color-brand-hover: #fb923c; /* lighter orange color on hover */
+    --color-on-brand: #0a0a0a; /* text on brand-colored backgrounds (neutral-950) */
+
+    --color-surface: #171717; /* cards and panels (neutral-900) */
+    --color-field: #0a0a0a; /* input backgrounds (neutral-950) */
+    --color-border: #262626; /* default borders (neutral-800) */
+    --color-border-strong: #404040; /* controls and emphasized borders (neutral-700) */
+    --color-muted: #a3a3a3; /* secondary text (neutral-400) */
 }
 
 @layer base {

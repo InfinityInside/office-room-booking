@@ -18,7 +18,7 @@ export function Field({ label, hint, error, className, children }: FieldProps) {
             {error ? (
                 <span className="text-xs text-red-400">{error}</span>
             ) : (
-                hint && <span className="text-xs text-neutral-400">{hint}</span>
+                hint && <span className="text-xs text-muted">{hint}</span>
             )}
         </label>
     );
