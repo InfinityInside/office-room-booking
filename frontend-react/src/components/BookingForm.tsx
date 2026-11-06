@@ -4,7 +4,7 @@ import { useCurrentUser } from '../auth/AuthContext.ts';
 import { BOOKING_RULES, END_TIMES, START_TIMES } from '../bookingRules.ts';
 import type { Booking, Room } from '../types.ts';
 import { addDays, todayInput } from '../utils/time.ts';
-import { TimeSelect } from '../pages/TimeSelect.tsx';
+import { TimeSelect } from './TimeSelect.tsx';
 
 interface BookingFormProps {
     room: Room;

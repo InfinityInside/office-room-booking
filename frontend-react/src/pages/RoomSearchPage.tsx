@@ -11,7 +11,7 @@ import { combine, todayInput } from '../utils/time.ts';
 import { toggleItem } from '../utils/list.ts';
 import { Link } from 'react-router';
 import type { Booking, Room } from '../types.ts';
-import { TimeSelect } from './TimeSelect.tsx';
+import { TimeSelect } from '../components/TimeSelect.tsx';
 import { END_TIMES, START_TIMES } from '../bookingRules.ts';
 import { BookingForm } from '../components/BookingForm.tsx';
 import { Modal } from '../components/Modal.tsx';
