@@ -1,5 +1,11 @@
-import { addMinutesToTime, timeOptions } from './utils/time';
-
+import {
+    addDays,
+    addMinutesToTime,
+    minutesToTime,
+    timeOptions,
+    timeToMinutes,
+    todayInput,
+} from './utils/time';
 
 export const BOOKING_RULES = {
     openTime: '07:00',
@@ -25,3 +31,30 @@ export const END_TIMES = timeOptions(
     closeTime,
     stepMinutes,
 );
+
+const DEFAULT_SEARCH_MINUTES = 60;
+
+/**
+ * A sensible first search: the next full hour today, for one hour, within opening hours.
+ * If today's last possible start has passed, tomorrow at opening time.
+ */
+export function defaultSearchSlot(): { date: string; startTime: string; endTime: string } {
+    const now = new Date();
+    const nextFullHour = (now.getHours() + 1) * 60; // minutes since midnight
+    const latestStart = timeToMinutes(closeTime) - DEFAULT_SEARCH_MINUTES;
+
+    if (nextFullHour <= latestStart) {
+        const start = Math.max(nextFullHour, timeToMinutes(openTime));
+        return {
+            date: todayInput(),
+            startTime: minutesToTime(start),
+            endTime: minutesToTime(start + DEFAULT_SEARCH_MINUTES),
+        };
+    }
+
+    return {
+        date: addDays(todayInput(), 1),
+        startTime: openTime,
+        endTime: addMinutesToTime(openTime, DEFAULT_SEARCH_MINUTES),
+    };
+}

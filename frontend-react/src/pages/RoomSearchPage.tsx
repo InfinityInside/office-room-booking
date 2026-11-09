@@ -7,11 +7,11 @@ import {
 } from '../api/mockApi.ts';
 import { useCurrentUser } from '../auth/AuthContext.ts';
 import { useState } from 'react';
-import { combine, formatLongDate, todayInput } from '../utils/time.ts';
+import { combine, formatLongDate } from '../utils/time.ts';
 import { toggleItem } from '../utils/list.ts';
 import type { Booking, Room } from '../types.ts';
 import { TimeSelect } from '../components/TimeSelect.tsx';
-import { END_TIMES, START_TIMES } from '../bookingRules.ts';
+import { defaultSearchSlot, END_TIMES, START_TIMES } from '../bookingRules.ts';
 import { BookingForm } from '../components/BookingForm.tsx';
 import { Modal } from '../components/Modal.tsx';
 import  { type Availability, RoomCard } from '../components/RoomCard.tsx';
@@ -26,9 +26,10 @@ export function RoomSearchPage() {
     const user = useCurrentUser();
 
     // ----- State: only what the user chose -----
-    const [date, setDate] = useState(todayInput);
-    const [startTime, setStartTime] = useState('09:00');
-    const [endTime, setEndTime] = useState('10:00');
+    const [initialSlot] = useState(defaultSearchSlot);
+    const [date, setDate] = useState(initialSlot.date);
+    const [startTime, setStartTime] = useState(initialSlot.startTime);
+    const [endTime, setEndTime] = useState(initialSlot.endTime);
     const [minCapacity, setMinCapacity] = useState(1);
     const [floor, setFloor] = useState(''); // '' = any floor
     const [equipmentIds, setEquipmentIds] = useState<number[]>([]);
