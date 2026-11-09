@@ -2,5 +2,5 @@
 export const CONTROL_CLASSES =
     'h-11 w-full rounded-lg px-3 text-sm' + // size and shape
     'border border-border-strong bg-field text-neutral-100 ' + // colors
-    'placeholder:text-neutral-500 hover:border-neutral-600 focus-visible:border-brand' + // states
+    'placeholder:text-neutral-500 hover:border-neutral-600 focus-visible:border-brand ' + // states
     'transition-colors disabled:cursor-not-allowed disabled:opacity-50';
