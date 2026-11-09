@@ -23,6 +23,7 @@ export function Modal({ open, title, onClose, children }: ModalProps) {
         }
         if (open && !dialog.open) {
             dialog.showModal();
+            dialog.querySelector<HTMLElement>('input, select, textarea')?.focus();
         }
         if (!open && dialog.open) {
             dialog.close();

@@ -5,6 +5,11 @@ import { BOOKING_RULES, END_TIMES, START_TIMES } from '../bookingRules.ts';
 import type { Booking, Room } from '../types.ts';
 import { addDays, todayInput } from '../utils/time.ts';
 import { TimeSelect } from './TimeSelect.tsx';
+import { Field } from './ui/Field.tsx';
+import { Input } from './ui/Input.tsx';
+import { Textarea } from './ui/Textarea.tsx';
+import { Alert } from './ui/Alert.tsx';
+import { Button } from './ui/Button.tsx';
 
 interface BookingFormProps {
     room: Room;
@@ -48,54 +53,38 @@ export function BookingForm({
     const today = todayInput();
 
     return (
-        <form onSubmit={handleSubmit}>
-            <fieldset>
-                <legend>Book {room.name}</legend>
-                <p>
-                    <label>
-                        Title{' '}
-                        <input value={title} onChange={(e) => setTitle(e.target.value)} required />
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        Description{' '}
-                        <textarea
-                            value={description}
-                            onChange={(e) => setDescription(e.target.value)}
-                        />
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        Date{' '}
-                        <input
-                            type="date"
-                            value={date}
-                            min={today}
-                            max={addDays(today, BOOKING_RULES.maxDaysAhead)}
-                            onChange={(e) => setDate(e.target.value)}
-                            required
-                        />
-                    </label>{' '}
-                    <label>
-                        From{' '}
-                        <TimeSelect
-                            value={startTime}
-                            options={START_TIMES}
-                            onChange={setStartTime}
-                        />
-                    </label>{' '}
-                    <label>
-                        To <TimeSelect value={endTime} options={END_TIMES} onChange={setEndTime} />
-                    </label>
-                </p>
-                {error && <p role="alert">{error}</p>}
-                <button type="submit">Book</button>{' '}
-                <button type="button" onClick={onCancel}>
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+            <Field label="Title">
+                <Input value={title} onChange={(e) => setTitle(e.target.value)} required />
+            </Field>
+            <Field label="Description">
+                <Textarea value={description} onChange={(e) => setDescription(e.target.value)} />
+            </Field>
+            <div className="grid grid-cols-2 gap-4 sm:grid-cols-[2fr_1fr_1fr]">
+                <Field label="Date" className="col-span-2 sm:col-span-1">
+                    <Input
+                        type="date"
+                        value={date}
+                        min={today}
+                        max={addDays(today, BOOKING_RULES.maxDaysAhead)}
+                        onChange={(e) => setDate(e.target.value)}
+                        required
+                    />
+                </Field>
+                <Field label="From">
+                    <TimeSelect value={startTime} options={START_TIMES} onChange={setStartTime} />
+                </Field>
+                <Field label="To">
+                    <TimeSelect value={endTime} options={END_TIMES} onChange={setEndTime} />
+                </Field>
+            </div>
+            {error && <Alert tone="error">{error}</Alert>}
+            <div className="flex justify-end gap-3 pt-2">
+                <Button onClick={onCancel}>
                     Cancel
-                </button>
-            </fieldset>
+                </Button>
+                <Button type="submit" variant="primary">Book</Button>
+            </div>
         </form>
     );
 }

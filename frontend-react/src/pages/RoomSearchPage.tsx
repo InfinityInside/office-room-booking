@@ -7,14 +7,20 @@ import {
 } from '../api/mockApi.ts';
 import { useCurrentUser } from '../auth/AuthContext.ts';
 import { useState } from 'react';
-import { combine, todayInput } from '../utils/time.ts';
+import { combine, formatLongDate, todayInput } from '../utils/time.ts';
 import { toggleItem } from '../utils/list.ts';
-import { Link } from 'react-router';
 import type { Booking, Room } from '../types.ts';
 import { TimeSelect } from '../components/TimeSelect.tsx';
 import { END_TIMES, START_TIMES } from '../bookingRules.ts';
 import { BookingForm } from '../components/BookingForm.tsx';
 import { Modal } from '../components/Modal.tsx';
+import  { type Availability, RoomCard } from '../components/RoomCard.tsx';
+import { Card } from '../components/ui/Card.tsx';
+import { Field } from '../components/ui/Field.tsx';
+import { Input } from '../components/ui/Input.tsx';
+import { Select } from '../components/ui/Select.tsx';
+import { cn } from '../utils/cn.ts';
+import { Alert } from '../components/ui/Alert.tsx';
 
 export function RoomSearchPage() {
     const user = useCurrentUser();
@@ -46,19 +52,17 @@ export function RoomSearchPage() {
             equipmentIds.every((id) => room.equipmentIds.includes(id)),
     );
 
-    function isBookable(roomId: number): boolean {
-        return validRange && !isPast && isRoomFree(roomId, start, end);
-    }
-
-    function availability(roomId: number): string {
+    const availabilityOf = (roomId: number): Availability => {
         if (!validRange) {
-            return '—';
+            return 'unknown';
         }
         if (isPast) {
-            return 'In the past';
+            return 'past';
         }
-        return isRoomFree(roomId, start, end) ? 'Free' : 'Booked';
-    }
+        return isRoomFree(roomId, start, end) ? 'free' : 'booked';
+    };
+
+    const freeCount = results.filter((room) => availabilityOf(room.id) === 'free').length;
 
     function handleBookClick(room: Room) {
         setMessage(null);
@@ -71,68 +75,108 @@ export function RoomSearchPage() {
     }
 
     return (
-        <>
-            <h1>Find a room</h1>
-            <fieldset>
-                <legend>Filters</legend>
-                <p>
-                    <label>
-                        Date{' '}
-                        <input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
-                    </label>{' '}
-                    <label>
-                        From{' '}
+        <div className="flex flex-col gap-8">
+            <div className="flex flex-col gap-1">
+                <h1 className="text-3xl font-semibold tracking-tight">Find a room</h1>
+                <p className="text-sm text-muted">
+                    {formatLongDate(date)} · {startTime}–{endTime}
+                    {validRange && !isPast && ` · ${freeCount} of ${results.length} rooms free`}
+                </p>
+            </div>
+            <Card className="flex flex-col gap-5">
+                <div className="grid grid-cols-2 gap-4 lg:grid-cols-5">
+                    <Field label="Date" className="col-span-2 lg:col-span-1">
+                        <Input type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+                    </Field>
+                    <Field label="From">
                         <TimeSelect
                             value={startTime}
                             options={START_TIMES}
                             onChange={setStartTime}
                         />
-                    </label>{' '}
-                    <label>
-                        To <TimeSelect value={endTime} options={END_TIMES} onChange={setEndTime} />
-                    </label>
-                </p>
-                <p>
-                    <label>
-                        Min. capacity{' '}
-                        <input
+                    </Field>
+                    <Field label="To">
+                        <TimeSelect value={endTime} options={END_TIMES} onChange={setEndTime} />
+                    </Field>
+                    <Field label="Min. capacity">
+                        <Input
                             type="number"
                             min={1}
                             value={minCapacity}
                             onChange={(e) => setMinCapacity(Number(e.target.value))}
                         />
-                    </label>{' '}
-                    <label>
-                        Floor{' '}
-                        <select value={floor} onChange={(e) => setFloor(e.target.value)}>
+                    </Field>
+                    <Field label="Floor">
+                        <Select value={floor} onChange={(e) => setFloor(e.target.value)}>
                             <option value="">Any</option>
                             {floors.map((f) => (
                                 <option key={f} value={f}>
                                     {f}
                                 </option>
                             ))}
-                        </select>
-                    </label>
-                </p>
-                <p>
-                    Equipment:{' '}
-                    {getEquipmentTypes().map((type) => (
-                        <label key={type.id}>
-                            <input
-                                type="checkbox"
-                                checked={equipmentIds.includes(type.id)}
-                                onChange={() =>
+                        </Select>
+                    </Field>
+                </div>
+                <div
+                    role="group"
+                    aria-labelledby="equipment-label"
+                    className="flex flex-wrap items-center gap-2"
+                >
+                    <span
+                        id="equipment-label"
+                        className="mr-1 text-sm font-medium text-neutral-300"
+                    >
+                        Equipment
+                    </span>
+                    {getEquipmentTypes().map((type) => {
+                        const selected = equipmentIds.includes(type.id);
+                        return (
+                            <button
+                                key={type.id}
+                                type="button"
+                                aria-pressed={selected}
+                                onClick={() =>
                                     setEquipmentIds((current) => toggleItem(current, type.id))
                                 }
-                            />
-                            {type.name}{' '}
-                        </label>
-                    ))}
-                </p>
-            </fieldset>
+                                className={cn(
+                                    'h-9 rounded-full border px-3.5 text-sm transition-colors',
+                                    selected
+                                        ? 'border-brand bg-brand/15 text-orange-300'
+                                        : 'border-border-strong text-neutral-300 hover:border-neutral-500 hover:text-neutral-100',
+                                )}
+                            >
+                                {type.name}
+                            </button>
+                        );
+                    })}
+                </div>
+            </Card>
 
-            {!validRange && <p role="alert">End time must be after start time.</p>}
-            {message && <p role="status">{message}</p>}
+            {!validRange && <Alert tone="error">End time must be after start time.</Alert>}
+            {message && <Alert tone="success">{message}</Alert>}
+
+            {results.length === 0 ? (
+                <Card className="py-12 text-center">
+                    <p className="font-medium">No rooms match your filters</p>
+                    <p className="mt-1 text-sm text-muted">
+                        Try a lower capacity or fewer equipment options.
+                    </p>
+                </Card>
+            ) : (
+                <div className="grid grid-cols-1 gap-5 md:grid-cols-2 lg:grid-cols-3">
+                        {results.map((room) => (
+                            <RoomCard
+                                key={room.id}
+                                room={room}
+                                equipmentNames={room.equipmentIds
+                                    .map((id) => getEquipmentType(id)?.name)
+                                    .filter((name): name is string => name !== undefined)}
+                                availability={availabilityOf(room.id)}
+                                onBook={() => handleBookClick(room)}
+                            />
+                        ))}
+                </div>
+            )}
 
             <Modal
                 open={bookingRoom !== null}
@@ -151,51 +195,6 @@ export function RoomSearchPage() {
                     />
                 )}
             </Modal>
-
-            {results.length === 0 ? (
-                <p>No rooms match your filters. Try a lower capacity or fewer equipment options.</p>
-            ) : (
-                <table>
-                    <thead>
-                        <tr>
-                            <th>Room</th>
-                            <th>Floor</th>
-                            <th>Capacity</th>
-                            <th>Equipment</th>
-                            <th>Availability</th>
-                            <th>Details</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {results.map((room) => (
-                            <tr key={room.id}>
-                                <td>
-                                    {room.name}
-                                    {room.grantIds.length > 0 && ' (restricted)'}
-                                </td>
-                                <td>{room.floor}</td>
-                                <td>{room.capacity}</td>
-                                <td>
-                                    {room.equipmentIds
-                                        .map((id) => getEquipmentType(id)?.name)
-                                        .join(', ') || 'None'}
-                                </td>
-                                <td>{availability(room.id)}</td>
-                                <td>
-                                    <button
-                                        type="button"
-                                        disabled={!isBookable(room.id)}
-                                        onClick={() => handleBookClick(room)}
-                                    >
-                                        Book
-                                    </button>{' '}
-                                    <Link to={`/rooms/${room.id}`}>Details</Link>
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                </table>
-            )}
-        </>
+        </div>
     );
 }
