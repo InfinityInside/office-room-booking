@@ -74,3 +74,13 @@ export function formatTime(iso: string): string {
         hourCycle: 'h23',
     });
 }
+
+/** ISO string -> { weekday: "Mon", day: "9", month: "Nov" } in local time. */
+export function formatDateParts(iso: string): { weekday: string; day: string; month: string } {
+    const date = new Date(iso);
+    return {
+        weekday: date.toLocaleDateString('en-GB', { weekday: 'short' }),
+        day: date.toLocaleDateString('en-GB', { day: 'numeric' }),
+        month: date.toLocaleDateString('en-GB', { month: 'short' }),
+    };
+}
