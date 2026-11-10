@@ -1,29 +1,19 @@
 import { Link, useParams } from 'react-router';
-import {
-    addDays,
-    addMinutesToTime,
-    combine,
-    formatLongDate,
-    overlaps,
-    timeOptions,
-    todayInput,
-} from '../utils/time.ts';
-import { BOOKING_RULES } from '../bookingRules.ts';
+import { addDays, addMinutesToTime, formatLongDate, todayInput } from '../utils/time.ts';
 import { useCurrentUser } from '../auth/AuthContext.ts';
-import { type ReactNode, useState } from 'react';
+import { useState } from 'react';
 import { canBookRoom, getBookingsForRoom, getEquipmentType, getRoom } from '../api/mockApi.ts';
 import type { Booking } from '../types.ts';
 import { BookingForm } from '../components/BookingForm.tsx';
 import { Modal } from '../components/Modal.tsx';
+import { Card } from '../components/ui/Card.tsx';
+import { Badge } from '../components/ui/Badge.tsx';
+import { Button } from '../components/ui/Button.tsx';
+import { Input } from '../components/ui/Input.tsx';
+import { Alert } from '../components/ui/Alert.tsx';
+import { DayTimeline } from '../components/DayTimeline.tsx';
 
-const SLOT_MINUTES = 15;
-
-/** The timeline's rows: 07:00, 07:30, ... 19:30 */
-const SLOTS = timeOptions(
-    BOOKING_RULES.openTime,
-    addMinutesToTime(BOOKING_RULES.closeTime, -SLOT_MINUTES),
-    SLOT_MINUTES,
-);
+const NEW_BOOKING_MINUTES = 30;
 
 export function RoomDetailsPage() {
     const { roomId } = useParams();
@@ -39,25 +29,27 @@ export function RoomDetailsPage() {
 
     if (!room || !canBookRoom(user, room)) {
         return (
-            <>
-                <h1>Room not found</h1>
-                <p>This room doesn't exist or you don't have access to it.</p>
-                <Link to="/rooms">Back to search</Link>
-            </>
+            <Card className="mx-auto max-w-md py-12 text-center">
+                <h1 className="text-xl font-semibold tracking-tight">Room not found</h1>
+                <p className="mt-1 text-sm text-muted">
+                    This room doesn't exist or you don't have access to it.
+                </p>
+                <Link
+                    to="/rooms"
+                    className="mt-4 inline-block text-sm font-medium text-brand hover:text-brand-hover"
+                >
+                    Back to search
+                </Link>
+            </Card>
         );
     }
 
     // ----- Derived values -----
     const dayBookings = getBookingsForRoom(room.id, date);
-    const now = new Date();
-
-    const bookingInSlot = (slot: string): Booking | undefined => {
-        const slotStart = combine(date, slot);
-        const slotEnd = combine(date, addMinutesToTime(slot, SLOT_MINUTES));
-        return dayBookings.find((b) =>
-            overlaps(new Date(b.start), new Date(b.end), slotStart, slotEnd),
-        );
-    };
+    const today = todayInput();
+    const equipmentNames = room.equipmentIds
+        .map((id) => getEquipmentType(id)?.name)
+        .filter((name): name is string => name !== undefined);
 
     // ----- Event handlers -----
     const changeDate = (newDate: string) => {
@@ -75,63 +67,116 @@ export function RoomDetailsPage() {
         setSelectedSlot(null);
     };
 
-    // ----- Render helper for one timeline row -----
-    const renderSlotStatus = (slot: string): ReactNode => {
-        const booking = bookingInSlot(slot);
-        if (booking) {
-            return booking.userId === user.id ? (
-                <strong>Your booking: {booking.title}</strong>
-            ) : (
-                'Booked'
-            );
-        }
-        if (combine(date, slot) < now) {
-            return 'Past';
-        }
-        return (
-            <button type="button" onClick={() => handleSlotClick(slot)}>
-                Free, book this slot
-            </button>
-        );
-    };
-
     return (
-        <>
-            <p>
-                <Link to="/rooms">Back to search</Link>
-            </p>
+        <div className="flex flex-col gap-6">
+            <Link
+                to="/rooms"
+                className="w-fit text-sm text-muted transition-colors hover:text-neutral-100"
+            >
+                ← Back to search
+            </Link>
+            <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,2fr)] lg:items-start">
+                {/* Room info */}
+                <Card className="flex flex-col gap-5 lg:sticky lg:top-32">
+                    <div className="flex flex-col gap-1">
+                        <h1 className="text-2xl font-semibold tracking-tight">{room.name}</h1>
+                        {room.description && (
+                            <p className="text-sm text-muted">{room.description}</p>
+                        )}
+                    </div>
+                    <dl className="grid grid-cols-2 gap-4">
+                        <div>
+                            <dt className="text-xs text-muted">Floor</dt>
+                            <dd className="mt-0.5 font-medium">{room.floor}</dd>
+                        </div>
+                        <div>
+                            <dt className="text-xs text-muted">Capacity</dt>
+                            <dd className="mt-0.5 font-medium">{room.capacity} people</dd>
+                        </div>
+                        <div className="col-span-2">
+                            <dt className="text-xs text-muted">Equipment</dt>
+                            <dd className="mt-1.5 flex flex-wrap gap-1.5">
+                                {equipmentNames.length > 0 ? (
+                                    equipmentNames.map((name) => <Badge key={name}>{name}</Badge>)
+                                ) : (
+                                    <span className="text-sm">None</span>
+                                )}
+                            </dd>
+                        </div>
+                        <div className="col-span-2">
+                            <dt className="text-xs text-muted">Access</dt>
+                            <dd className="mt-0.5 font-medium">
+                                {room.grantIds.length > 0 ? 'Restricted' : 'Open to everyone'}
+                            </dd>
+                        </div>
+                    </dl>
+                </Card>
+                {/* Day timeline */}
+                <Card className="flex flex-col gap-5">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                        <h2 className="text-lg font-semibold tracking-tight">
+                            {formatLongDate(date)}
+                        </h2>
+                        <div className="flex items-center gap-2">
+                            <Button
+                                size="sm"
+                                aria-label="Previous day"
+                                onClick={() => changeDate(addDays(date, -1))}
+                            >
+                                ←
+                            </Button>
+                            <Button
+                                size="sm"
+                                disabled={date === today}
+                                onClick={() => changeDate(today)}
+                            >
+                                Today
+                            </Button>
+                            <Button
+                                size="sm"
+                                aria-label="Next day"
+                                onClick={() => changeDate(addDays(date, 1))}
+                            >
+                                →
+                            </Button>
+                            <Input
+                                type="date"
+                                aria-label="Date"
+                                value={date}
+                                onChange={(e) => changeDate(e.target.value)}
+                                className="h-9 w-auto"
+                            />
+                        </div>
+                    </div>
 
-            <h1>{room.name}</h1>
-            <dl>
-                <dt>Floor</dt>
-                <dd>{room.floor}</dd>
-                <dt>Capacity</dt>
-                <dd>{room.capacity} people</dd>
-                <dt>Equipment</dt>
-                <dd>
-                    {room.equipmentIds.map((id) => getEquipmentType(id)?.name).join(', ') || 'None'}
-                </dd>
-                {room.description && (
-                    <>
-                        <dt>Description</dt>
-                        <dd>{room.description}</dd>
-                    </>
-                )}
-            </dl>
+                    {message && <Alert tone="success">{message}</Alert>}
 
-            <h2>Availability</h2>
-            <p>
-                <button type="button" onClick={() => changeDate(addDays(date, -1))}>
-                    Previous day
-                </button>{' '}
-                <input type="date" value={date} onChange={(e) => changeDate(e.target.value)} />{' '}
-                <button type="button" onClick={() => changeDate(addDays(date, 1))}>
-                    Next day
-                </button>
-            </p>
-            <h3>{formatLongDate(date)}</h3>
+                    <DayTimeline
+                        date={date}
+                        bookings={dayBookings}
+                        currentUserId={user.id}
+                        onSlotClick={handleSlotClick}
+                    />
 
-            {message && <p role="status">{message}</p>}
+                    <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-muted">
+                        <span className="flex items-center gap-2">
+                            <span
+                                aria-hidden="true"
+                                className="size-3 rounded-sm border border-brand/60 bg-brand/20"
+                            />
+                            Your booking
+                        </span>
+                        <span className="flex items-center gap-2">
+                            <span
+                                aria-hidden="true"
+                                className="size-3 rounded-sm border border-border-strong bg-neutral-800"
+                            />
+                            Booked by someone else
+                        </span>
+                        <span>Click a free time to book it.</span>
+                    </div>
+                </Card>
+            </div>
 
             <Modal
                 open={selectedSlot !== null}
@@ -144,31 +189,12 @@ export function RoomDetailsPage() {
                         room={room}
                         initialDate={date}
                         initialStartTime={selectedSlot}
-                        initialEndTime={addMinutesToTime(selectedSlot, SLOT_MINUTES)}
+                        initialEndTime={addMinutesToTime(selectedSlot, NEW_BOOKING_MINUTES)}
                         onBooked={handleBooked}
                         onCancel={() => setSelectedSlot(null)}
                     />
                 )}
             </Modal>
-
-            <table>
-                <thead>
-                    <tr>
-                        <th>Time</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {SLOTS.map((slot) => (
-                        <tr key={slot}>
-                            <td>
-                                {slot}–{addMinutesToTime(slot, SLOT_MINUTES)}
-                            </td>
-                            <td>{renderSlotStatus(slot)}</td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-        </>
+        </div>
     );
 }

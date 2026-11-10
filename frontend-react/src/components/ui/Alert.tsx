@@ -19,7 +19,11 @@ export function Alert({ tone, className, children }: AlertProps) {
     return (
         <p
             role={tone === 'error' ? 'alert' : 'status'}
-            className={cn('rounded-lg px-3 py-2 text-sm', TONE_CLASSES[tone], className)}
+            className={cn(
+                'rounded-lg px-3 py-2 text-sm wrap-break-word',
+                TONE_CLASSES[tone],
+                className,
+            )}
         >
             {children}
         </p>
