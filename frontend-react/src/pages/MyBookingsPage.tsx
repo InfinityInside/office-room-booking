@@ -5,7 +5,7 @@ import { canCancelBooking, cancelBooking, getBookingsForUser, getRoom } from '..
 import { useState } from 'react';
 import { useRefresh } from '../hooks/useRefresh.ts';
 import { cn } from '../utils/cn.ts';
-import { Alert } from '../components/ui/Alert.tsx';
+import { Alert, type Notice } from '../components/ui/Alert.tsx';
 import { Card } from '../components/ui/Card.tsx';
 import { Link } from 'react-router';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
@@ -29,11 +29,6 @@ const STATUS_BADGES: Record<
     completed: { label: 'Completed', tone: 'neutral' },
     cancelled: { label: 'Cancelled', tone: 'danger' },
 };
-
-interface Notice {
-    tone: 'success' | 'error';
-    text: string;
-}
 
 export function MyBookingsPage() {
     const user = useCurrentUser();

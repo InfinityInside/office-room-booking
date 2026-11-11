@@ -19,8 +19,8 @@ import { Card } from '../components/ui/Card.tsx';
 import { Field } from '../components/ui/Field.tsx';
 import { Input } from '../components/ui/Input.tsx';
 import { Select } from '../components/ui/Select.tsx';
-import { cn } from '../utils/cn.ts';
 import { Alert } from '../components/ui/Alert.tsx';
+import { Chip } from '../components/ui/Chip.tsx';
 
 export function RoomSearchPage() {
     const user = useCurrentUser();
@@ -132,22 +132,15 @@ export function RoomSearchPage() {
                     {getEquipmentTypes().map((type) => {
                         const selected = equipmentIds.includes(type.id);
                         return (
-                            <button
+                            <Chip
                                 key={type.id}
-                                type="button"
-                                aria-pressed={selected}
+                                selected={selected}
                                 onClick={() =>
                                     setEquipmentIds((current) => toggleItem(current, type.id))
                                 }
-                                className={cn(
-                                    'h-9 rounded-full border px-3.5 text-sm transition-colors',
-                                    selected
-                                        ? 'border-brand bg-brand/15 text-orange-300'
-                                        : 'border-border-strong text-neutral-300 hover:border-neutral-500 hover:text-neutral-100',
-                                )}
                             >
                                 {type.name}
-                            </button>
+                            </Chip>
                         );
                     })}
                 </div>

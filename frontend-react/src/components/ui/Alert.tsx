@@ -1,10 +1,16 @@
 import type { ReactNode } from 'react';
 import { cn } from '../../utils/cn';
 
-type AlertTone = 'error' | 'success';
+type AlertTone = 'error' | 'warning' | 'success';
+
+export interface Notice {
+    tone: AlertTone;
+    text: string;
+}
 
 const TONE_CLASSES: Record<AlertTone, string> = {
     error: 'bg-red-500/10 text-red-300',
+    warning: 'bg-amber-500/10 text-amber-300',
     success: 'bg-emerald-500/10 text-emerald-300',
 };
 
