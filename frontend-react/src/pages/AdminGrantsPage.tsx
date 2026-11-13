@@ -12,6 +12,14 @@ import { useCurrentUser } from '../auth/AuthContext';
 import { SYSTEM_GRANTS } from '../grants';
 import { useRefresh } from '../hooks/useRefresh';
 import type { Grant, User } from '../types';
+import { Alert, type Notice } from '../components/ui/Alert.tsx';
+import { Table, Td, Th } from '../components/ui/Table.tsx';
+import { Badge } from '../components/ui/Badge.tsx';
+import { Button } from '../components/ui/Button.tsx';
+import { Card } from '../components/ui/Card.tsx';
+import { Field } from '../components/ui/Field.tsx';
+import { Input } from '../components/ui/Input.tsx';
+import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 
 /** Runs a change and returns a success message, or throws. */
 type RunChange = (change: () => string) => void;
@@ -22,25 +30,35 @@ interface SectionProps {
 
 export function AdminGrantsPage() {
     const refresh = useRefresh();
-    const [message, setMessage] = useState<string | null>(null);
+    const [notice, setNotice] = useState<Notice | null>(null);
 
     /** Runs a change, shows its result or error, and re-renders the whole page. */
     const runChange: RunChange = (change) => {
         try {
-            setMessage(change());
+            setNotice({ tone: 'success', text: change() });
         } catch (e) {
-            setMessage(e instanceof Error ? e.message : 'Something went wrong.');
+            setNotice({
+                tone: 'error',
+                text: e instanceof Error ? e.message : 'Something went wrong.',
+            });
         }
         refresh();
     };
 
     return (
-        <>
-            <h1>Grants and users</h1>
-            {message && <p role="status">{message}</p>}
-            <GrantsSection runChange={runChange} />
+        <div className="flex flex-col gap-12">
+            <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-1">
+                    <h1 className="text-3xl font-semibold tracking-tight">Grants and users</h1>
+                    <p className="text-sm text-muted">
+                        Grants decide who can use admin pages and who can book restricted rooms.
+                    </p>
+                </div>
+                {notice && <Alert tone={notice.tone}>{notice.text}</Alert>}
+                <GrantsSection runChange={runChange} />
+            </div>
             <UserGrantsSection runChange={runChange} />
-        </>
+        </div>
     );
 }
 
@@ -50,6 +68,7 @@ function GrantsSection({ runChange }: SectionProps) {
     const [code, setCode] = useState('');
     const [name, setName] = useState('');
     const [description, setDescription] = useState('');
+    const [toDeactivate, setToDeactivate] = useState<Grant | null>(null); // null = dialog closed
 
     const handleCreate = (event: SubmitEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -62,90 +81,157 @@ function GrantsSection({ runChange }: SectionProps) {
         });
     };
 
-    const handleToggleActive = (grant: Grant) => {
-        if (
-            grant.active &&
-            !window.confirm(`Deactivate ${grant.name}? Its holders lose access to its rooms.`)
-        ) {
-            return;
-        }
+    const changeActive = (grant: Grant, active: boolean) => {
         runChange(() => {
-            const updated = setGrantActive(user, grant.id, !grant.active);
+            const updated = setGrantActive(user, grant.id, active);
             return `${updated.name} is now ${updated.active ? 'active' : 'inactive'}.`;
         });
     };
 
+    const confirmDeactivate = () => {
+        if (!toDeactivate) {
+            return;
+        }
+        changeActive(toDeactivate, false);
+        setToDeactivate(null);
+    };
+
     return (
-        <section>
-            <h2>Grants</h2>
-            <table>
+        <section className="flex flex-col gap-6">
+            <h2 className="sr-only">Grants</h2>
+
+            <Table>
                 <thead>
                     <tr>
-                        <th>Code</th>
-                        <th>Name</th>
-                        <th>Type</th>
-                        <th>Users</th>
-                        <th>Rooms</th>
-                        <th>Status</th>
-                        <th>Actions</th>
+                        <Th>Code</Th>
+                        <Th>Name</Th>
+                        <Th>Type</Th>
+                        <Th className="text-right">Users</Th>
+                        <Th>Rooms</Th>
+                        <Th>Status</Th>
+                        <Th>
+                            <span className="sr-only">Actions</span>
+                        </Th>
                     </tr>
                 </thead>
                 <tbody>
-                    {getGrants().map((grant) => (
-                        <tr key={grant.id}>
-                            <td>{grant.code}</td>
-                            <td>{grant.name}</td>
-                            <td>{grant.type === 'SYSTEM' ? 'System' : 'Room access'}</td>
-                            <td>{countUsersWithGrant(grant.id)}</td>
-                            <td>
-                                {grant.type === 'SYSTEM'
-                                    ? 'All rooms'
-                                    : getRoomsRequiringGrant(grant.id)
-                                          .map((room) => room.name)
-                                          .join(', ') || 'None'}
-                            </td>
-                            <td>{grant.active ? 'Active' : 'Inactive'}</td>
-                            <td>
-                                {grant.type === 'ROOM_ACCESS' && (
-                                    <button type="button" onClick={() => handleToggleActive(grant)}>
-                                        {grant.active ? 'Deactivate' : 'Activate'}
-                                    </button>
-                                )}
-                            </td>
-                        </tr>
-                    ))}
-                </tbody>
-            </table>
-            <p>
-                <small>Link rooms to grants on the Manage rooms page.</small>
-            </p>
+                    {getGrants().map((grant) => {
+                        const isSystem = grant.type === 'SYSTEM';
+                        const rooms = getRoomsRequiringGrant(grant.id).map((room) => room.name);
 
-            <form onSubmit={handleCreate}>
-                <fieldset>
-                    <legend>New room-access grant</legend>
-                    <label>
-                        Code{' '}
-                        <input
+                        return (
+                            <tr
+                                key={grant.id}
+                                className="border-b border-border transition-colors last:border-b-0 hover:bg-neutral-800/40"
+                            >
+                                <Td className="font-mono text-xs text-muted">{grant.code}</Td>
+                                <Td>
+                                    <div className="font-medium">{grant.name}</div>
+                                    {grant.description && (
+                                        <div className="max-w-64 truncate text-xs text-muted">
+                                            {grant.description}
+                                        </div>
+                                    )}
+                                </Td>
+                                <Td>
+                                    <Badge tone={isSystem ? 'brand' : 'neutral'}>
+                                        {isSystem ? 'System' : 'Room access'}
+                                    </Badge>
+                                </Td>
+                                <Td className="text-right tabular-nums">
+                                    {countUsersWithGrant(grant.id)}
+                                </Td>
+                                <Td
+                                    className={
+                                        rooms.length === 0 && !isSystem ? 'text-muted' : undefined
+                                    }
+                                >
+                                    {isSystem ? 'All rooms' : rooms.join(', ') || 'None'}
+                                </Td>
+                                <Td>{!grant.active && <Badge tone="danger">Inactive</Badge>}</Td>
+                                <Td className="text-right">
+                                    {!isSystem &&
+                                        (grant.active ? (
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => setToDeactivate(grant)}
+                                                className="text-red-300 enabled:hover:bg-red-500/10 enabled:hover:text-red-200"
+                                            >
+                                                Deactivate
+                                            </Button>
+                                        ) : (
+                                            <Button
+                                                size="sm"
+                                                variant="ghost"
+                                                onClick={() => changeActive(grant, true)}
+                                            >
+                                                Activate
+                                            </Button>
+                                        ))}
+                                </Td>
+                            </tr>
+                        );
+                    })}
+                </tbody>
+            </Table>
+
+            <Card>
+                <h3 className="mb-1 text-sm font-medium">Create a room-access grant</h3>
+                <p className="mb-4 text-xs text-muted">
+                    Link it to rooms on the Manage rooms page, then give it to users below.
+                </p>
+                <form
+                    onSubmit={handleCreate}
+                    className="grid grid-cols-1 items-end gap-4 sm:grid-cols-2 lg:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,2fr)_auto]"
+                >
+                    <Field label="Code">
+                        <Input
                             value={code}
                             onChange={(e) => setCode(e.target.value)}
-                            placeholder="e.g. HR"
+                            placeholder="HR"
                             required
                         />
-                    </label>{' '}
-                    <label>
-                        Name{' '}
-                        <input value={name} onChange={(e) => setName(e.target.value)} required />
-                    </label>{' '}
-                    <label>
-                        Description{' '}
-                        <input
+                    </Field>
+                    <Field label="Name">
+                        <Input
+                            value={name}
+                            onChange={(e) => setName(e.target.value)}
+                            placeholder="Human resources"
+                            required
+                        />
+                    </Field>
+                    <Field label="Description">
+                        <Input
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
+                            placeholder="Optional"
                         />
-                    </label>{' '}
-                    <button type="submit">Create grant</button>
-                </fieldset>
-            </form>
+                    </Field>
+                    <Button type="submit" variant="primary">
+                        Create grant
+                    </Button>
+                </form>
+            </Card>
+
+            <ConfirmDialog
+                open={toDeactivate !== null}
+                title="Deactivate this grant?"
+                description={
+                    toDeactivate && (
+                        <>
+                            Users holding "{toDeactivate.name}" lose access to its rooms until it's
+                            activated again. The rooms stay restricted; they don't become open to
+                            everyone.
+                        </>
+                    )
+                }
+                confirmLabel="Deactivate"
+                cancelLabel="Keep active"
+                tone="danger"
+                onConfirm={confirmDeactivate}
+                onCancel={() => setToDeactivate(null)}
+            />
         </section>
     );
 }
@@ -170,30 +256,37 @@ function UserGrantsSection({ runChange }: SectionProps) {
     };
 
     return (
-        <section>
-            <h2>Users</h2>
-            <table>
+        <section className="flex flex-col gap-6">
+            <div className="flex flex-col gap-1">
+                <h2 className="text-xl font-semibold tracking-tight">Users</h2>
+                <p className="text-sm text-muted">Tick a box to give a user that grant.</p>
+            </div>
+
+            <Table>
                 <thead>
                     <tr>
-                        <th>User</th>
-                        <th>Email</th>
+                        <Th className="sticky left-0 z-10 bg-surface">User</Th>
                         {grants.map((grant) => (
-                            <th key={grant.id}>
+                            <Th key={grant.id} className="text-center">
                                 {grant.name}
-                                {!grant.active && ' (inactive)'}
-                            </th>
+                                {!grant.active && (
+                                    <span className="ml-1 font-normal">(inactive)</span>
+                                )}
+                            </Th>
                         ))}
                     </tr>
                 </thead>
                 <tbody>
                     {users.map((target) => (
-                        <tr key={target.id}>
-                            <td>
-                                {target.firstName} {target.lastName}
-                            </td>
-                            <td>{target.email}</td>
+                        <tr key={target.id} className="border-b border-border last:border-b-0">
+                            <Td className="sticky left-0 z-10 bg-surface">
+                                <div className="font-medium whitespace-nowrap">
+                                    {target.firstName} {target.lastName}
+                                </div>
+                                <div className="text-xs text-muted">{target.email}</div>
+                            </Td>
                             {grants.map((grant) => (
-                                <td key={grant.id}>
+                                <Td key={grant.id} className="text-center">
                                     <input
                                         type="checkbox"
                                         aria-label={`${grant.name} for ${target.firstName} ${target.lastName}`}
@@ -205,13 +298,14 @@ function UserGrantsSection({ runChange }: SectionProps) {
                                                 : undefined
                                         }
                                         onChange={() => handleToggle(target, grant)}
+                                        className="size-4 accent-brand disabled:cursor-not-allowed disabled:opacity-50"
                                     />
-                                </td>
+                                </Td>
                             ))}
                         </tr>
                     ))}
                 </tbody>
-            </table>
+            </Table>
         </section>
     );
 }
