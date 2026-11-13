@@ -11,24 +11,14 @@ import { Link } from 'react-router';
 import { ConfirmDialog } from '../components/ConfirmDialog.tsx';
 import { Badge } from '../components/ui/Badge.tsx';
 import { Button } from '../components/ui/Button.tsx';
+import { displayStatusOf, STATUS_BADGES } from '../utils/bookingStatus.ts';
 
 type Tab = 'upcoming' | 'past';
-type DisplayStatus = 'upcoming' | 'now' | 'completed' | 'cancelled';
 
 const TABS: { id: Tab; label: string }[] = [
     { id: 'upcoming', label: 'Upcoming' },
     { id: 'past', label: 'Past and cancelled' },
 ];
-
-const STATUS_BADGES: Record<
-    DisplayStatus,
-    { label: string; tone: 'brand' | 'neutral' | 'danger' } | null
-> = {
-    upcoming: null, // the normal case needs no badge
-    now: { label: 'Happening now', tone: 'brand' },
-    completed: { label: 'Completed', tone: 'neutral' },
-    cancelled: { label: 'Cancelled', tone: 'danger' },
-};
 
 export function MyBookingsPage() {
     const user = useCurrentUser();
@@ -40,18 +30,12 @@ export function MyBookingsPage() {
 
     const now = new Date();
 
-    const statusOf = (booking: Booking): DisplayStatus => {
-        if (booking.status === 'CANCELLED') {
-            return 'cancelled';
-        }
-        if (new Date(booking.end) <= now) {
-            return 'completed';
-        }
-        return new Date(booking.start) <= now ? 'now' : 'upcoming';
-    };
-
     const myBookings = getBookingsForUser(user.id).sort((a, b) => a.start.localeCompare(b.start));
-    const upcoming = myBookings.filter((b) => statusOf(b) === 'upcoming' || statusOf(b) === 'now');
+    const isUpcoming = (booking: Booking) => {
+        const status = displayStatusOf(booking, now);
+        return status === 'upcoming' || status === 'now';
+    };
+    const upcoming = myBookings.filter(isUpcoming);
     const past = myBookings.filter((b) => !upcoming.includes(b)).reverse(); // newest first
     const shown = tab === 'upcoming' ? upcoming : past;
     const counts: Record<Tab, number> = { upcoming: upcoming.length, past: past.length };
@@ -131,7 +115,7 @@ export function MyBookingsPage() {
             ) : (
                 <ul className="flex flex-col gap-3">
                     {shown.map((booking) => {
-                        const status = statusOf(booking);
+                        const status = displayStatusOf(booking, now);
                         const badge = STATUS_BADGES[status];
                         const date = formatDateParts(booking.start);
                         const room = getRoom(booking.roomId);
