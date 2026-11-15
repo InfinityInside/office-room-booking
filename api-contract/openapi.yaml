@@ -1,0 +1,273 @@
+openapi: 3.1.0
+
+info:
+  title: Office Room Booking API
+  version: 0.1.0
+  summary: Book meeting rooms in an office building.
+  description: |
+    Conventions:
+    - Date-times are ISO 8601 in UTC, e.g. `2026-11-16T08:00:00Z`.
+    - Errors use Problem Details (RFC 9457), with the media type `application/problem+json`.
+    - All endpoints require a bearer token unless marked otherwise.
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local backend
+
+tags:
+  - name: Auth
+    description: Registering, logging in, and the current user.
+
+# Secure by default: every endpoint requires a token unless it says `security: []`.
+security:
+  - bearerAuth: []
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      operationId: register
+      summary: Create an account and log in
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '201':
+          description: Account created. The user is logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+  /auth/login:
+    post:
+      tags: [ Auth ]
+      operationId: login
+      summary: Log in with email and password
+      description: |
+        Wrong email and wrong password give the same 401 response,
+        so the API doesn't reveal which emails have accounts.
+      security: [ ]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationFailed'
+
+  /auth/me:
+    get:
+      tags: [ Auth ]
+      operationId: getCurrentUser
+      summary: The logged-in user
+      description: Used by the frontend after a page reload, to restore who is logged in from a stored token.
+      responses:
+        '200':
+          description: The current user.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      required: [ id, firstName, lastName, email, active, grantIds ]
+      properties:
+        id:
+          type: integer
+          format: int64
+          examples: [ 2 ]
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          examples: [ Tom ]
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          examples: [ Novak ]
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          examples: [ tom@office.test ]
+        active:
+          type: boolean
+          description: Inactive users can't log in.
+        grantIds:
+          type: array
+          items:
+            type: integer
+            format: int64
+          description: Ids of all grants assigned to the user, active or not.
+          examples: [ [ 2 ] ]
+
+    CurrentUser:
+      description: A user, plus what the frontend needs to decide what to show.
+      allOf:
+        - $ref: '#/components/schemas/User'
+        - type: object
+          required: [ grantCodes ]
+          properties:
+            grantCodes:
+              type: array
+              items:
+                type: string
+              description: Codes of the user's **active** grants, e.g. `ADMIN`.
+              examples: [ [ ADMIN ] ]
+
+    RegisterRequest:
+      type: object
+      required: [ firstName, lastName, email, password ]
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        password:
+          type: string
+          minLength: 8
+          maxLength: 128
+
+    LoginRequest:
+      type: object
+      required: [ email, password ]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 1
+
+    AuthResponse:
+      type: object
+      required: [ accessToken, tokenType, expiresIn, user ]
+      properties:
+        accessToken:
+          type: string
+          description: 'A JWT to send as `Authorization: Bearer <accessToken>`.'
+        tokenType:
+          type: string
+          const: Bearer
+        expiresIn:
+          type: integer
+          description: Seconds until the token expires.
+          examples: [ 3600 ]
+        user:
+          $ref: '#/components/schemas/CurrentUser'
+
+    Problem:
+      description: An error, in the Problem Details format (RFC 9457).
+      type: object
+      required: [ title, status ]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: about:blank
+          description: Identifies the kind of problem. `about:blank` means "see the status code".
+        title:
+          type: string
+          description: A short summary of the kind of problem.
+          examples: [ Conflict ]
+        status:
+          type: integer
+          examples: [ 409 ]
+        detail:
+          type: string
+          description: A human-readable explanation of this occurrence, safe to show to the user.
+          examples: [ This room is already booked at that time. ]
+        instance:
+          type: string
+          format: uri-reference
+          description: The request path that caused the problem.
+        errors:
+          type: array
+          description: For validation problems, one entry per invalid field.
+          items:
+            $ref: '#/components/schemas/FieldError'
+
+    FieldError:
+      type: object
+      required: [ field, message ]
+      properties:
+        field:
+          type: string
+          examples: [ password ]
+        message:
+          type: string
+          examples: [ Must be at least 8 characters. ]
+
+  responses:
+    Unauthorized:
+      description: Missing or invalid token, or wrong login credentials.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Logged in, but not allowed to do this.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: Doesn't exist, or isn't visible to the current user.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: Conflicts with the current state, e.g. an overlapping booking or a taken email.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ValidationFailed:
+      description: The request is well-formed but invalid. See `errors` for details per field.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
