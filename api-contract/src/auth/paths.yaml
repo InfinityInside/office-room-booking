@@ -1,0 +1,66 @@
+register:
+  post:
+    tags: [Auth]
+    operationId: register
+    summary: Create an account and log in
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/RegisterRequest'
+    responses:
+      '201':
+        description: Account created. The user is logged in.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/AuthResponse'
+      '409':
+        $ref: '../common/responses.yaml#/Conflict'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+login:
+  post:
+    tags: [Auth]
+    operationId: login
+    summary: Log in with email and password
+    description: |
+      Wrong email and wrong password give the same 401 response,
+      so the API doesn't reveal which emails have accounts.
+    security: []
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/LoginRequest'
+    responses:
+      '200':
+        description: Logged in.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/AuthResponse'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+me:
+  get:
+    tags: [Auth]
+    operationId: getCurrentUser
+    summary: The logged-in user
+    description: Used by the frontend after a page reload, to restore who is logged in from a stored token.
+    responses:
+      '200':
+        description: The current user.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/CurrentUser'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'

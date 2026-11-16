@@ -1,0 +1,7 @@
+EquipmentTypeId:
+  name: equipmentTypeId
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64

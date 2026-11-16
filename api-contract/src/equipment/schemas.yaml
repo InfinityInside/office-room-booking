@@ -1,0 +1,38 @@
+EquipmentType:
+  type: object
+  required: [id, code, name]
+  properties:
+    id:
+      type: integer
+      format: int64
+      examples: [1]
+    code:
+      type: string
+      pattern: '^[A-Z][A-Z0-9_]*$'
+      examples: [PROJECTOR]
+    name:
+      type: string
+      examples: [Projector]
+
+EquipmentTypeInput:
+  type: object
+  required: [code, name]
+  properties:
+    code:
+      type: string
+      pattern: '^[A-Z][A-Z0-9_]*$'
+      maxLength: 50
+      description: Permanent. Uppercase letters, digits and underscores, starting with a letter.
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+
+EquipmentTypeRename:
+  type: object
+  required: [name]
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100

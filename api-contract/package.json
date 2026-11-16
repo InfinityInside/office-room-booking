@@ -1,0 +1,12 @@
+{
+  "name": "office-room-booking-contract",
+  "private": true,
+  "scripts": {
+    "lint": "redocly lint src/openapi.yaml",
+    "bundle": "redocly bundle src/openapi.yaml -o dist/openapi.yaml",
+    "docs": "redocly build-docs src/openapi.yaml -o dist/docs.html"
+  },
+  "devDependencies": {
+    "@redocly/cli": "2.79.0"
+  }
+}

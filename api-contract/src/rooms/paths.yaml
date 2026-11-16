@@ -1,0 +1,173 @@
+rooms:
+  get:
+    tags: [Rooms]
+    operationId: listRooms
+    summary: Rooms the current user may book
+    description: |
+      Active rooms that are open to everyone, or restricted to a grant the user holds.
+      Admins get every active room.
+    parameters:
+      - $ref: './parameters.yaml#/MinCapacity'
+      - $ref: './parameters.yaml#/Floor'
+      - $ref: './parameters.yaml#/EquipmentIds'
+    responses:
+      '200':
+        description: Matching rooms, sorted by floor and name.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './schemas.yaml#/Room'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+
+roomAvailability:
+  get:
+    tags: [Rooms]
+    operationId: searchRoomAvailability
+    summary: Rooms the user may book, with availability for a time range
+    description: |
+      The same rooms as `GET /rooms`, each marked available or not
+      for the range from `start` to `end`.
+    parameters:
+      - $ref: '../common/parameters.yaml#/Start'
+      - $ref: '../common/parameters.yaml#/End'
+      - $ref: './parameters.yaml#/MinCapacity'
+      - $ref: './parameters.yaml#/Floor'
+      - $ref: './parameters.yaml#/EquipmentIds'
+    responses:
+      '200':
+        description: Matching rooms, sorted by floor and name.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './schemas.yaml#/RoomAvailability'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+room:
+  get:
+    tags: [Rooms]
+    operationId: getRoom
+    summary: One room
+    parameters:
+      - $ref: './parameters.yaml#/RoomId'
+    responses:
+      '200':
+        description: The room.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/Room'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+
+roomBookings:
+  get:
+    tags: [Rooms]
+    operationId: listRoomBookings
+    summary: A room's bookings on one day, for its timeline
+    description: |
+      Confirmed bookings that overlap the given day.
+      Other people's bookings include only their times, not their titles.
+    parameters:
+      - $ref: './parameters.yaml#/RoomId'
+      - $ref: '../common/parameters.yaml#/Date'
+    responses:
+      '200':
+        description: The day's bookings, sorted by start time.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './schemas.yaml#/RoomBookingSlot'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+adminRooms:
+  get:
+    tags: [Rooms]
+    operationId: listAllRooms
+    summary: All rooms, including inactive ones (admin)
+    responses:
+      '200':
+        description: All rooms, sorted by floor and name.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './schemas.yaml#/AdminRoom'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+  post:
+    tags: [Rooms]
+    operationId: createRoom
+    summary: Create a room (admin)
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/RoomInput'
+    responses:
+      '201':
+        description: The created room.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/AdminRoom'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '409':
+        $ref: '../common/responses.yaml#/Conflict'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+adminRoom:
+  put:
+    tags: [Rooms]
+    operationId: updateRoom
+    summary: Replace a room's details (admin)
+    description: Rooms are never deleted, since bookings refer to them. Set `active` to false instead.
+    parameters:
+      - $ref: './parameters.yaml#/RoomId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/RoomInput'
+    responses:
+      '200':
+        description: The updated room.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/AdminRoom'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+      '409':
+        $ref: '../common/responses.yaml#/Conflict'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'

@@ -1,0 +1,69 @@
+openapi: 3.1.0
+
+info:
+  title: Office Room Booking API
+  version: 0.1.0
+  summary: Book meeting rooms in an office building.
+  description: |
+    Conventions:
+    - Date-times are ISO 8601 in UTC, e.g. `2026-11-16T08:00:00Z`.
+    - Errors use Problem Details (RFC 9457), with the media type `application/problem+json`.
+    - All endpoints require a bearer token unless marked otherwise.
+  license:
+    name: MIT
+    identifier: MIT
+
+servers:
+  - url: http://localhost:8080/api
+    description: Local backend
+
+tags:
+  - name: Auth
+    description: Registering, logging in, and the current user.
+  - name: Rooms
+    description: Finding rooms, their availability, and their timeline.
+  - name: Equipment types
+    description: The kinds of equipment a room can have.
+
+# Secure by default: every endpoint requires a token unless it says `security: []`.
+security:
+  - bearerAuth: []
+
+# The table of contents. Each path is defined in its area's paths.yaml.
+paths:
+  # Auth
+  /auth/register:
+    $ref: './auth/paths.yaml#/register'
+  /auth/login:
+    $ref: './auth/paths.yaml#/login'
+  /auth/me:
+    $ref: './auth/paths.yaml#/me'
+
+  # Rooms
+  /rooms:
+    $ref: './rooms/paths.yaml#/rooms'
+  /rooms/availability:
+    $ref: './rooms/paths.yaml#/roomAvailability'
+  /rooms/{roomId}:
+    $ref: './rooms/paths.yaml#/room'
+  /rooms/{roomId}/bookings:
+    $ref: './rooms/paths.yaml#/roomBookings'
+  /admin/rooms:
+    $ref: './rooms/paths.yaml#/adminRooms'
+  /admin/rooms/{roomId}:
+    $ref: './rooms/paths.yaml#/adminRoom'
+
+  # Equipment types
+  /equipment-types:
+    $ref: './equipment/paths.yaml#/equipmentTypes'
+  /admin/equipment-types:
+    $ref: './equipment/paths.yaml#/adminEquipmentTypes'
+  /admin/equipment-types/{equipmentTypeId}:
+    $ref: './equipment/paths.yaml#/adminEquipmentType'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT

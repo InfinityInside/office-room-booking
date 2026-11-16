@@ -1,0 +1,34 @@
+Unauthorized:
+  description: Missing or invalid token, or wrong login credentials.
+  content:
+    application/problem+json:
+      schema:
+        $ref: './schemas.yaml#/Problem'
+
+Forbidden:
+  description: Logged in, but not allowed to do this.
+  content:
+    application/problem+json:
+      schema:
+        $ref: './schemas.yaml#/Problem'
+
+NotFound:
+  description: Doesn't exist, or isn't visible to the current user.
+  content:
+    application/problem+json:
+      schema:
+        $ref: './schemas.yaml#/Problem'
+
+Conflict:
+  description: Conflicts with the current state, e.g. an overlapping booking or a taken email.
+  content:
+    application/problem+json:
+      schema:
+        $ref: './schemas.yaml#/Problem'
+
+ValidationFailed:
+  description: The request is well-formed but invalid. See `errors` for details per field.
+  content:
+    application/problem+json:
+      schema:
+        $ref: './schemas.yaml#/Problem'

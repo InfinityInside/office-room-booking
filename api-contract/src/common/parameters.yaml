@@ -1,0 +1,29 @@
+Start:
+  name: start
+  in: query
+  required: true
+  description: Start of the time range, as an ISO 8601 date-time.
+  schema:
+    type: string
+    format: date-time
+  example: '2026-11-17T08:00:00Z'
+
+End:
+  name: end
+  in: query
+  required: true
+  description: End of the time range, as an ISO 8601 date-time. Must be after `start`.
+  schema:
+    type: string
+    format: date-time
+  example: '2026-11-17T09:00:00Z'
+
+Date:
+  name: date
+  in: query
+  required: true
+  description: A calendar day in the office's time zone, as YYYY-MM-DD.
+  schema:
+    type: string
+    format: date
+  example: '2026-11-17'

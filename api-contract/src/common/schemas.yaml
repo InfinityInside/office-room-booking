@@ -1,0 +1,41 @@
+Problem:
+  description: An error, in the Problem Details format (RFC 9457).
+  type: object
+  required: [title, status]
+  properties:
+    type:
+      type: string
+      format: uri-reference
+      default: about:blank
+      description: Identifies the kind of problem. `about:blank` means "see the status code".
+    title:
+      type: string
+      description: A short summary of the kind of problem.
+      examples: [Conflict]
+    status:
+      type: integer
+      examples: [409]
+    detail:
+      type: string
+      description: A human-readable explanation of this occurrence, safe to show to the user.
+      examples: [This room is already booked at that time.]
+    instance:
+      type: string
+      format: uri-reference
+      description: The request path that caused the problem.
+    errors:
+      type: array
+      description: For validation problems, one entry per invalid field.
+      items:
+        $ref: '#/FieldError'
+
+FieldError:
+  type: object
+  required: [field, message]
+  properties:
+    field:
+      type: string
+      examples: [password]
+    message:
+      type: string
+      examples: [Must be at least 8 characters.]

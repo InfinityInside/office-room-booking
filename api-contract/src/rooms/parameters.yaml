@@ -1,0 +1,36 @@
+RoomId:
+  name: roomId
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64
+
+MinCapacity:
+  name: minCapacity
+  in: query
+  description: Only rooms for at least this many people.
+  schema:
+    type: integer
+    minimum: 1
+
+Floor:
+  name: floor
+  in: query
+  description: Only rooms on this floor.
+  schema:
+    type: integer
+
+EquipmentIds:
+  name: equipmentId
+  in: query
+  description: |
+    Only rooms that have all of these equipment types.
+    Repeat the parameter for several, e.g. `?equipmentId=1&equipmentId=3`.
+  style: form
+  explode: true
+  schema:
+    type: array
+    items:
+      type: integer
+      format: int64

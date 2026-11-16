@@ -1,0 +1,96 @@
+User:
+  type: object
+  required: [id, firstName, lastName, email, active, grantIds]
+  properties:
+    id:
+      type: integer
+      format: int64
+      examples: [2]
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      examples: [Tom]
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+      examples: [Novak]
+    email:
+      type: string
+      format: email
+      maxLength: 254
+      examples: [tom@office.test]
+    active:
+      type: boolean
+      description: Inactive users can't log in.
+    grantIds:
+      type: array
+      items:
+        type: integer
+        format: int64
+      description: Ids of all grants assigned to the user, active or not.
+      examples: [[2]]
+
+CurrentUser:
+  description: A user, plus what the frontend needs to decide what to show.
+  allOf:
+    - $ref: '#/User'
+    - type: object
+      required: [grantCodes]
+      properties:
+        grantCodes:
+          type: array
+          items:
+            type: string
+          description: Codes of the user's **active** grants, e.g. `ADMIN`.
+          examples: [[ADMIN]]
+
+RegisterRequest:
+  type: object
+  required: [firstName, lastName, email, password]
+  properties:
+    firstName:
+      type: string
+      minLength: 1
+      maxLength: 100
+    lastName:
+      type: string
+      minLength: 1
+      maxLength: 100
+    email:
+      type: string
+      format: email
+      maxLength: 254
+    password:
+      type: string
+      minLength: 8
+      maxLength: 128
+
+LoginRequest:
+  type: object
+  required: [email, password]
+  properties:
+    email:
+      type: string
+      format: email
+    password:
+      type: string
+      minLength: 1
+
+AuthResponse:
+  type: object
+  required: [accessToken, tokenType, expiresIn, user]
+  properties:
+    accessToken:
+      type: string
+      description: 'A JWT to send as `Authorization: Bearer <accessToken>`.'
+    tokenType:
+      type: string
+      const: Bearer
+    expiresIn:
+      type: integer
+      description: Seconds until the token expires.
+      examples: [3600]
+    user:
+      $ref: '#/CurrentUser'

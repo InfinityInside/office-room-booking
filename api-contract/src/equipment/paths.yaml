@@ -1,0 +1,96 @@
+equipmentTypes:
+  get:
+    tags: [Equipment types]
+    operationId: listEquipmentTypes
+    summary: All equipment types
+    responses:
+      '200':
+        description: All equipment types, sorted by name.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './schemas.yaml#/EquipmentType'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+
+adminEquipmentTypes:
+  post:
+    tags: [Equipment types]
+    operationId: createEquipmentType
+    summary: Create an equipment type (admin)
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/EquipmentTypeInput'
+    responses:
+      '201':
+        description: The created equipment type.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/EquipmentType'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '409':
+        $ref: '../common/responses.yaml#/Conflict'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+adminEquipmentType:
+  patch:
+    tags: [Equipment types]
+    operationId: renameEquipmentType
+    summary: Rename an equipment type (admin)
+    description: Only the display name can change. The code is permanent.
+    parameters:
+      - $ref: './parameters.yaml#/EquipmentTypeId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/EquipmentTypeRename'
+    responses:
+      '200':
+        description: The renamed equipment type.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/EquipmentType'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+      '409':
+        $ref: '../common/responses.yaml#/Conflict'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+  delete:
+    tags: [Equipment types]
+    operationId: deleteEquipmentType
+    summary: Delete an unused equipment type (admin)
+    parameters:
+      - $ref: './parameters.yaml#/EquipmentTypeId'
+    responses:
+      '204':
+        description: Deleted.
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+      '409':
+        description: The equipment type is still assigned to rooms.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'

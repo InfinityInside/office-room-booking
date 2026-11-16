@@ -17,3 +17,9 @@ Thumbs.db
 
 # Generated API docs
 api-contract/docs.html
+
+# Dependencies
+node_modules/
+
+# Generated contract files
+api-contract/dist/
