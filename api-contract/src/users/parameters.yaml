@@ -1,0 +1,15 @@
+UserId:
+  name: userId
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64
+
+UserQuery:
+  name: q
+  in: query
+  description: Only users whose name or email contains this text. Not case-sensitive.
+  schema:
+    type: string
+    maxLength: 100

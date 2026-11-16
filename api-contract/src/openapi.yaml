@@ -26,10 +26,14 @@ tags:
     description: The kinds of equipment a room can have.
   - name: Bookings
     description: Booking rooms, the current user's bookings, and the admin overview.
+  - name: Grants
+    description: Admin grants and room-access grants.
+  - name: Users
+    description: Users and their grants.
 
 # Secure by default: every endpoint requires a token unless it says `security: []`.
 security:
-  - bearerAuth: []
+  - bearerAuth: [ ]
 
 # The table of contents. Each path is defined in its area's paths.yaml.
 paths:
@@ -74,6 +78,18 @@ paths:
     $ref: './bookings/paths.yaml#/cancelBooking'
   /admin/bookings:
     $ref: './bookings/paths.yaml#/adminBookings'
+
+  # Grants
+  /admin/grants:
+    $ref: './grants/paths.yaml#/adminGrants'
+  /admin/grants/{grantId}:
+    $ref: './grants/paths.yaml#/adminGrant'
+
+  # Users
+  /admin/users:
+    $ref: './users/paths.yaml#/adminUsers'
+  /admin/users/{userId}/grants/{grantId}:
+    $ref: './users/paths.yaml#/userGrant'
 
 components:
   securitySchemes:

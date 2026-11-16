@@ -1,0 +1,82 @@
+adminGrants:
+  get:
+    tags: [Grants]
+    operationId: listGrants
+    summary: All grants, with their holders and rooms (admin)
+    responses:
+      '200':
+        description: All grants, system grants first, then by name.
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: './schemas.yaml#/AdminGrant'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+  post:
+    tags: [Grants]
+    operationId: createGrant
+    summary: Create a room-access grant (admin)
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/GrantInput'
+    responses:
+      '201':
+        description: The created grant.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/Grant'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '409':
+        description: The code or name is already used.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+adminGrant:
+  patch:
+    tags: [Grants]
+    operationId: updateGrant
+    summary: Change a grant, e.g. deactivate it (admin)
+    parameters:
+      - $ref: './parameters.yaml#/GrantId'
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/GrantUpdate'
+    responses:
+      '200':
+        description: The updated grant.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/Grant'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+      '409':
+        description: The name is already used, or a system grant was asked to be deactivated.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'

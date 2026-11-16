@@ -1,0 +1,10 @@
+UserPage:
+  allOf:
+    - $ref: '../common/schemas.yaml#/PageMeta'
+    - type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '../auth/schemas.yaml#/User'

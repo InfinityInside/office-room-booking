@@ -1,0 +1,82 @@
+GrantType:
+  type: string
+  enum: [SYSTEM, ROOM_ACCESS]
+  description: |
+    SYSTEM grants control features, e.g. ADMIN, and are defined in code.
+    ROOM_ACCESS grants control which restricted rooms a user may book, and are created by admins.
+
+Grant:
+  type: object
+  required: [id, code, name, type, description, active]
+  properties:
+    id:
+      type: integer
+      format: int64
+      examples: [2]
+    code:
+      type: string
+      pattern: '^[A-Z][A-Z0-9_]*$'
+      description: Permanent. Code that checks grants uses this, never the name.
+      examples: [IT]
+    name:
+      type: string
+      examples: [IT]
+    type:
+      $ref: '#/GrantType'
+    description:
+      type: string
+      description: Empty if there is none.
+      examples: ['IT department rooms']
+    active:
+      type: boolean
+      description: Holders of an inactive grant lose its access. Rooms requiring it stay restricted.
+
+AdminGrant:
+  description: A grant with what the admin overview shows about it.
+  allOf:
+    - $ref: '#/Grant'
+    - type: object
+      required: [userCount, rooms]
+      properties:
+        userCount:
+          type: integer
+          description: How many users hold this grant.
+          examples: [3]
+        rooms:
+          type: array
+          description: Rooms that require this grant. Always empty for system grants.
+          items:
+            $ref: '../rooms/schemas.yaml#/RoomSummary'
+
+GrantInput:
+  description: A new room-access grant. System grants can't be created through the API.
+  type: object
+  required: [code, name]
+  properties:
+    code:
+      type: string
+      pattern: '^[A-Z][A-Z0-9_]*$'
+      maxLength: 50
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+    description:
+      type: string
+      maxLength: 500
+      default: ''
+
+GrantUpdate:
+  description: Only the fields being changed. The code and type can't change, and system grants can't be deactivated.
+  type: object
+  minProperties: 1
+  properties:
+    name:
+      type: string
+      minLength: 1
+      maxLength: 100
+    description:
+      type: string
+      maxLength: 500
+    active:
+      type: boolean

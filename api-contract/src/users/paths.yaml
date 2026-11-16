@@ -1,0 +1,74 @@
+adminUsers:
+  get:
+    tags: [Users]
+    operationId: listUsers
+    summary: Users, with their grants (admin)
+    parameters:
+      - $ref: './parameters.yaml#/UserQuery'
+      - $ref: '../common/parameters.yaml#/Page'
+      - $ref: '../common/parameters.yaml#/Size'
+    responses:
+      '200':
+        description: One page of users, sorted by last name.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/UserPage'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+userGrant:
+  put:
+    tags: [Users]
+    operationId: assignGrant
+    summary: Give a user a grant (admin)
+    description: Idempotent. Giving a grant the user already has also succeeds.
+    parameters:
+      - $ref: './parameters.yaml#/UserId'
+      - $ref: '../grants/parameters.yaml#/GrantId'
+    responses:
+      '204':
+        description: The user has the grant.
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '404':
+        description: The user or the grant doesn't exist.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+  delete:
+    tags: [Users]
+    operationId: removeGrant
+    summary: Take a grant away from a user (admin)
+    description: |
+      Idempotent. Removing a grant the user doesn't have also succeeds.
+      Admins can't remove their own Admin grant, so nobody can lock themselves out.
+    parameters:
+      - $ref: './parameters.yaml#/UserId'
+      - $ref: '../grants/parameters.yaml#/GrantId'
+    responses:
+      '204':
+        description: The user doesn't have the grant.
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '404':
+        description: The user or the grant doesn't exist.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+      '409':
+        description: Admins can't remove their own Admin grant.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
