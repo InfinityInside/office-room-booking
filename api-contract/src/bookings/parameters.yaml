@@ -1,0 +1,49 @@
+BookingId:
+  name: bookingId
+  in: path
+  required: true
+  schema:
+    type: integer
+    format: int64
+
+Scope:
+  name: scope
+  in: query
+  required: true
+  description: |
+    `upcoming`: confirmed bookings that haven't ended yet, soonest first.
+    `past`: bookings that have ended or were cancelled, newest first.
+  schema:
+    type: string
+    enum: [upcoming, past]
+
+DateFilter:
+  name: date
+  in: query
+  description: Only bookings on this day, in the office's time zone, as YYYY-MM-DD.
+  schema:
+    type: string
+    format: date
+
+RoomFilter:
+  name: roomId
+  in: query
+  description: Only bookings of this room.
+  schema:
+    type: integer
+    format: int64
+
+StatusFilter:
+  name: status
+  in: query
+  description: Only bookings with this status. Leave out for all.
+  schema:
+    $ref: './schemas.yaml#/BookingStatus'
+
+Query:
+  name: q
+  in: query
+  description: Only bookings whose title, or the booker's name or email, contains this text. Not case-sensitive.
+  schema:
+    type: string
+    maxLength: 100

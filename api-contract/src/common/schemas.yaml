@@ -39,3 +39,23 @@ FieldError:
     message:
       type: string
       examples: [Must be at least 8 characters.]
+
+PageMeta:
+  description: Information about one page of a paginated list.
+  type: object
+  required: [page, size, totalItems, totalPages]
+  properties:
+    page:
+      type: integer
+      minimum: 1
+      examples: [1]
+    size:
+      type: integer
+      examples: [20]
+    totalItems:
+      type: integer
+      description: Items across all pages.
+      examples: [137]
+    totalPages:
+      type: integer
+      examples: [7]

@@ -1,0 +1,128 @@
+bookingRules:
+  get:
+    tags: [Bookings]
+    operationId: getBookingRules
+    summary: The rules every booking must follow
+    responses:
+      '200':
+        description: The booking rules.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/BookingRules'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+
+bookings:
+  post:
+    tags: [Bookings]
+    operationId: createBooking
+    summary: Book a room
+    description: |
+      The room must be one the user may book, and the times must follow the booking rules.
+      Overlapping a confirmed booking of the same room gives 409.
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: './schemas.yaml#/NewBooking'
+    responses:
+      '201':
+        description: The created booking.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/Booking'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '404':
+        description: The room doesn't exist, isn't active, or the user may not book it.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+      '409':
+        description: The room is already booked at that time.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+myBookings:
+  get:
+    tags: [Bookings]
+    operationId: listMyBookings
+    summary: The current user's bookings
+    parameters:
+      - $ref: './parameters.yaml#/Scope'
+      - $ref: '../common/parameters.yaml#/Page'
+      - $ref: '../common/parameters.yaml#/Size'
+    responses:
+      '200':
+        description: One page of the user's bookings.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/BookingPage'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'
+
+cancelBooking:
+  post:
+    tags: [Bookings]
+    operationId: cancelBooking
+    summary: Cancel a booking
+    description: |
+      Owners can cancel their own bookings, admins any booking,
+      but only while it's confirmed and hasn't started yet.
+      The booking is kept, with the status CANCELLED.
+    parameters:
+      - $ref: './parameters.yaml#/BookingId'
+    responses:
+      '200':
+        description: The cancelled booking.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/Booking'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '404':
+        $ref: '../common/responses.yaml#/NotFound'
+      '409':
+        description: The booking is already cancelled, or has already started.
+        content:
+          application/problem+json:
+            schema:
+              $ref: '../common/schemas.yaml#/Problem'
+
+adminBookings:
+  get:
+    tags: [Bookings]
+    operationId: listAllBookings
+    summary: Everyone's bookings, with filters (admin)
+    parameters:
+      - $ref: './parameters.yaml#/DateFilter'
+      - $ref: './parameters.yaml#/RoomFilter'
+      - $ref: './parameters.yaml#/StatusFilter'
+      - $ref: './parameters.yaml#/Query'
+      - $ref: '../common/parameters.yaml#/Page'
+      - $ref: '../common/parameters.yaml#/Size'
+    responses:
+      '200':
+        description: One page of matching bookings, newest first.
+        content:
+          application/json:
+            schema:
+              $ref: './schemas.yaml#/AdminBookingPage'
+      '401':
+        $ref: '../common/responses.yaml#/Unauthorized'
+      '403':
+        $ref: '../common/responses.yaml#/Forbidden'
+      '422':
+        $ref: '../common/responses.yaml#/ValidationFailed'

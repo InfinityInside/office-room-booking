@@ -24,6 +24,8 @@ tags:
     description: Finding rooms, their availability, and their timeline.
   - name: Equipment types
     description: The kinds of equipment a room can have.
+  - name: Bookings
+    description: Booking rooms, the current user's bookings, and the admin overview.
 
 # Secure by default: every endpoint requires a token unless it says `security: []`.
 security:
@@ -60,6 +62,18 @@ paths:
     $ref: './equipment/paths.yaml#/adminEquipmentTypes'
   /admin/equipment-types/{equipmentTypeId}:
     $ref: './equipment/paths.yaml#/adminEquipmentType'
+
+  # Bookings
+  /booking-rules:
+    $ref: './bookings/paths.yaml#/bookingRules'
+  /bookings:
+    $ref: './bookings/paths.yaml#/bookings'
+  /bookings/me:
+    $ref: './bookings/paths.yaml#/myBookings'
+  /bookings/{bookingId}/cancel:
+    $ref: './bookings/paths.yaml#/cancelBooking'
+  /admin/bookings:
+    $ref: './bookings/paths.yaml#/adminBookings'
 
 components:
   securitySchemes:
