@@ -4,9 +4,12 @@
   "scripts": {
     "lint": "redocly lint src/openapi.yaml",
     "bundle": "redocly bundle src/openapi.yaml -o dist/openapi.yaml",
-    "docs": "redocly build-docs src/openapi.yaml -o dist/docs.html"
+    "docs": "redocly build-docs src/openapi.yaml -o dist/docs.html",
+    "types:react": "npm run bundle && openapi-typescript dist/openapi.yaml -o ../frontend-react/src/api/schema.d.ts"
   },
   "devDependencies": {
-    "@redocly/cli": "2.79.0"
+    "@redocly/cli": "2.79.0",
+    "openapi-typescript": "7.13.0",
+    "typescript": "5.9.3"
   }
 }
