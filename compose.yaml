@@ -25,9 +25,11 @@ services:
       FLYWAY_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB}
       FLYWAY_USER: ${POSTGRES_USER}
       FLYWAY_PASSWORD: ${POSTGRES_PASSWORD}
-      FLYWAY_LOCATIONS: filesystem:/flyway/sql
+      # Schema migrations, plus demo data (development only)
+      FLYWAY_LOCATIONS: filesystem:/flyway/sql,filesystem:/flyway/seed
     volumes:
       - ./database/migrations:/flyway/sql:ro
+      - ./database/seed:/flyway/seed:ro
     depends_on:
       postgres:
         condition: service_healthy
