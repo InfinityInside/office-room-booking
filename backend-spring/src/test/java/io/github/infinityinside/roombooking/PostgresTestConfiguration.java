@@ -8,7 +8,7 @@ import org.testcontainers.utility.DockerImageName;
 
 /** A throwaway PostgreSQL for tests, the same version as in compose.yaml. */
 @TestConfiguration(proxyBeanMethods = false)
-class TestcontainersConfiguration {
+public class PostgresTestConfiguration {
 
     @Bean
     @ServiceConnection
