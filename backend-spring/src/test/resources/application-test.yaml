@@ -1,0 +1,12 @@
+spring:
+  # Placeholder connection settings, so tests don't need a .env file (e.g. in CI).
+  # Testcontainers replaces the actual connection through @ServiceConnection.
+  datasource:
+    url: jdbc:postgresql://localhost/unused
+    username: unused
+    password: unused
+
+  # Tests have no Flyway container, so the app applies the shared migrations itself.
+  flyway:
+    enabled: true
+    locations: filesystem:../database/migrations

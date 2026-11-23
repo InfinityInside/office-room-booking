@@ -8,11 +8,11 @@
         <version>4.1.2</version>
         <relativePath/> <!-- lookup parent from repository -->
     </parent>
-    <groupId>github.infinityinside</groupId>
-    <artifactId>backend-spring</artifactId>
+    <groupId>io.github.infinityinside</groupId>
+    <artifactId>room-booking</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <name>backend-spring</name>
-    <description>backend-spring</description>
+    <name>room-booking</name>
+    <description>room-booking</description>
     <url/>
     <licenses>
         <license/>
@@ -47,6 +47,27 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc-test</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <!-- Tests: a throwaway PostgreSQL in Docker, with the shared migrations applied -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-testcontainers</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-flyway</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.flywaydb</groupId>
+            <artifactId>flyway-database-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

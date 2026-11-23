@@ -23,6 +23,11 @@ spring:
         jdbc:
           time_zone: UTC
 
+  # The schema belongs to the shared migrations, run by the Flyway container in Compose.
+  # This backend never migrates the database itself; only the tests turn this on.
+  flyway:
+    enabled: false
+
 server:
   port: 8080
 
