@@ -15,7 +15,7 @@ import org.springframework.test.context.ActiveProfiles;
 /** Proves the database itself prevents double bookings, whatever any backend does. */
 @SpringBootTest
 @ActiveProfiles("test")
-@Import(TestcontainersConfiguration.class)
+@Import(PostgresTestConfiguration.class)
 class BookingOverlapConstraintTests {
 
     @Autowired

@@ -10,3 +10,7 @@ spring:
   flyway:
     enabled: true
     locations: filesystem:../database/migrations
+
+logging:
+  level:
+    org.hibernate.SQL: debug
