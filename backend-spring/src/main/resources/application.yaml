@@ -2,6 +2,10 @@ spring:
   application:
     name: backend-spring
 
+  web:
+    locale: en
+    locale-resolver: fixed
+
   # Local development: read the repo's .env file (the same one Docker Compose uses).
   # Real environment variables always win over it, e.g. in Docker or production.
   config:
