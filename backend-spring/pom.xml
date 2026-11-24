@@ -112,6 +112,7 @@
                             <generateModelDocumentation>false</generateModelDocumentation>
                             <configOptions>
                                 <interfaceOnly>true</interfaceOnly>
+                                <skipDefaultInterface>true</skipDefaultInterface>
                                 <useSpringBoot4>true</useSpringBoot4>
                                 <useJackson3>true</useJackson3>
                                 <useTags>true</useTags>
