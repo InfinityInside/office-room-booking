@@ -55,7 +55,9 @@ NewBooking:
     title:
       type: string
       minLength: 1
-      maxLength: 200
+      maxLength: 100
+      pattern: '^.*\S.*$'
+      x-pattern-message: Must not be blank.
     description:
       type: string
       maxLength: 2000

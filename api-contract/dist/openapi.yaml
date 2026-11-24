@@ -8,6 +8,7 @@ info:
     - Date-times are ISO 8601 in UTC, e.g. `2026-11-16T08:00:00Z`.
     - Errors use Problem Details (RFC 9457), with the media type `application/problem+json`.
     - All endpoints require a bearer token unless marked otherwise.
+    - The server removes leading and trailing whitespace from names and titles before saving them.
   license:
     name: MIT
     identifier: MIT
@@ -678,10 +679,14 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
         lastName:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
         email:
           type: string
           format: email
@@ -948,6 +953,8 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
         floor:
           type: integer
         capacity:
@@ -999,12 +1006,14 @@ components:
         code:
           type: string
           pattern: ^[A-Z][A-Z0-9_]*$
+          x-pattern-message: Use uppercase letters, digits and underscores, starting with a letter.
           maxLength: 50
-          description: Permanent. Uppercase letters, digits and underscores, starting with a letter.
         name:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
     EquipmentTypeRename:
       type: object
       required:
@@ -1014,6 +1023,8 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
     BookingRules:
       description: The rules every booking must follow. The backend enforces them; the frontend uses them to offer only valid choices.
       type: object
@@ -1075,7 +1086,9 @@ components:
         title:
           type: string
           minLength: 1
-          maxLength: 200
+          maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
         description:
           type: string
           maxLength: 2000
@@ -1305,11 +1318,14 @@ components:
         code:
           type: string
           pattern: ^[A-Z][A-Z0-9_]*$
+          x-pattern-message: Use uppercase letters, digits and underscores, starting with a letter.
           maxLength: 50
         name:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
         description:
           type: string
           maxLength: 500
@@ -1323,6 +1339,8 @@ components:
           type: string
           minLength: 1
           maxLength: 100
+          pattern: ^.*\S.*$
+          x-pattern-message: Must not be blank.
         description:
           type: string
           maxLength: 500

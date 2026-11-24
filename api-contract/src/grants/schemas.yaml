@@ -56,11 +56,14 @@ GrantInput:
     code:
       type: string
       pattern: '^[A-Z][A-Z0-9_]*$'
+      x-pattern-message: Use uppercase letters, digits and underscores, starting with a letter.
       maxLength: 50
     name:
       type: string
       minLength: 1
       maxLength: 100
+      pattern: '^.*\S.*$'
+      x-pattern-message: Must not be blank.
     description:
       type: string
       maxLength: 500
@@ -75,6 +78,8 @@ GrantUpdate:
       type: string
       minLength: 1
       maxLength: 100
+      pattern: '^.*\S.*$'
+      x-pattern-message: Must not be blank.
     description:
       type: string
       maxLength: 500

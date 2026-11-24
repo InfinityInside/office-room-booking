@@ -9,6 +9,7 @@ info:
     - Date-times are ISO 8601 in UTC, e.g. `2026-11-16T08:00:00Z`.
     - Errors use Problem Details (RFC 9457), with the media type `application/problem+json`.
     - All endpoints require a bearer token unless marked otherwise.
+    - The server removes leading and trailing whitespace from names and titles before saving them.
   license:
     name: MIT
     identifier: MIT

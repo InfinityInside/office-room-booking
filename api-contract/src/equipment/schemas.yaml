@@ -21,12 +21,14 @@ EquipmentTypeInput:
     code:
       type: string
       pattern: '^[A-Z][A-Z0-9_]*$'
+      x-pattern-message: Use uppercase letters, digits and underscores, starting with a letter.
       maxLength: 50
-      description: Permanent. Uppercase letters, digits and underscores, starting with a letter.
     name:
       type: string
       minLength: 1
       maxLength: 100
+      pattern: '^.*\S.*$'
+      x-pattern-message: Must not be blank.
 
 EquipmentTypeRename:
   type: object
@@ -36,3 +38,5 @@ EquipmentTypeRename:
       type: string
       minLength: 1
       maxLength: 100
+      pattern: '^.*\S.*$'
+      x-pattern-message: Must not be blank.
