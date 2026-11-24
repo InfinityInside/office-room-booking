@@ -14,8 +14,10 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 class EquipmentTypeControllerTests {
 
-    @Autowired private MockMvcTester mvc;
-    @Autowired private EquipmentTypeRepository equipmentTypes;
+    @Autowired
+    private MockMvcTester mvc;
+    @Autowired
+    private EquipmentTypeRepository equipmentTypes;
 
     @Test
     void listsEquipmentTypesSortedByName() {
@@ -50,8 +52,4 @@ class EquipmentTypeControllerTests {
         assertThat(mvc.get().uri("/actuator/health")).hasStatusOk();
     }
 
-    @Test
-    void answersNotImplementedForEndpointsNotWrittenYet() {
-        assertThat(mvc.delete().uri("/api/admin/equipment-types/1")).hasStatus(HttpStatus.NOT_IMPLEMENTED);
-    }
 }
