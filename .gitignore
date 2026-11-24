@@ -22,4 +22,5 @@ api-contract/docs.html
 node_modules/
 
 # Generated contract files
-api-contract/dist/
+api-contract/dist/*
+!api-contract/dist/openapi.yaml
