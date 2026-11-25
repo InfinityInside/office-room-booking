@@ -14,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.validation.FieldError;
 import org.springframework.validation.method.ParameterErrors;
 import org.springframework.validation.method.ParameterValidationResult;
@@ -44,6 +46,21 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     /** "Still referenced" errors: 23503 for NO ACTION foreign keys, 23001 for RESTRICT ones (PostgreSQL 18). */
     private static final Set<String> STILL_REFERENCED_STATES = Set.of("23503", "23001");
+
+    // Auth
+
+    @ExceptionHandler(AuthenticationException.class)
+    ResponseEntity<ProblemDetail> handleUnauthenticated(AuthenticationException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Log in to continue.");
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
+                .body(problem);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    ProblemDetail handleAccessDenied(AccessDeniedException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, "You don't have permission to do this.");
+    }
 
     // Our own exceptions
 

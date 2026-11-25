@@ -3,8 +3,10 @@ package io.github.infinityinside.roombooking.equipment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.infinityinside.roombooking.IntegrationTest;
+import io.github.infinityinside.roombooking.security.TestTokens;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -18,13 +20,15 @@ class EquipmentTypeControllerTests {
     private MockMvcTester mvc;
     @Autowired
     private EquipmentTypeRepository equipmentTypes;
+    @Autowired
+    private TestTokens tokens;
 
     @Test
     void listsEquipmentTypesSortedByName() {
         equipmentTypes.save(new EquipmentType("WHITEBOARD", "Whiteboard"));
         equipmentTypes.save(new EquipmentType("PROJECTOR", "Projector"));
 
-        assertThat(mvc.get().uri("/api/equipment-types"))
+        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
                 .hasStatusOk()
                 .hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
                 .bodyJson()
@@ -35,7 +39,7 @@ class EquipmentTypeControllerTests {
                         ]
                         """);
 
-        assertThat(mvc.get().uri("/api/equipment-types"))
+        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
                 .bodyJson()
                 .extractingPath("$[*].code")
                 .asArray()
@@ -44,7 +48,7 @@ class EquipmentTypeControllerTests {
 
     @Test
     void servesTheApiOnlyUnderTheApiPrefix() {
-        assertThat(mvc.get().uri("/equipment-types")).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(mvc.get().uri("/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1))).hasStatus(HttpStatus.NOT_FOUND);
     }
 
     @Test

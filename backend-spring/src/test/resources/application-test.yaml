@@ -14,3 +14,8 @@ spring:
 logging:
   level:
     org.hibernate.SQL: debug
+
+app:
+  jwt:
+    # Test-only signing key, used by in-memory test runs. Not a real secret.
+    secret: dGVzdC1vbmx5LXNlY3JldC1ub3QtZm9yLXByb2R1Y3Rpb24hIQ==
