@@ -49,12 +49,14 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
 
     // Auth
 
+    @ExceptionHandler(UnauthorizedException.class)
+    ResponseEntity<ProblemDetail> handleUnauthorized(UnauthorizedException exception) {
+        return unauthorized(exception.getMessage());
+    }
+
     @ExceptionHandler(AuthenticationException.class)
     ResponseEntity<ProblemDetail> handleUnauthenticated(AuthenticationException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, "Log in to continue.");
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
-                .body(problem);
+        return unauthorized("Log in to continue.");
     }
 
     @ExceptionHandler(AccessDeniedException.class)
@@ -72,6 +74,11 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
     @ExceptionHandler(ConflictException.class)
     ProblemDetail handleConflict(ConflictException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(InvalidInputException.class)
+    ProblemDetail handleInvalidInput(InvalidInputException exception) {
+        return validationProblem(List.of(new FieldErrorDto(exception.getField(), exception.getMessage())));
     }
 
     // Database constraints: the final guard against duplicates and race conditions
@@ -162,5 +169,11 @@ class ApiExceptionHandler extends ResponseEntityExceptionHandler {
             }
         }
         return Optional.empty();
+    }
+
+    private static ResponseEntity<ProblemDetail> unauthorized(String detail) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .header(HttpHeaders.WWW_AUTHENTICATE, "Bearer")
+                .body(ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, detail));
     }
 }
