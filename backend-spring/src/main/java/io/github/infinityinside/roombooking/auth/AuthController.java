@@ -33,7 +33,7 @@ class AuthController implements AuthApi {
 
     @Override
     public ResponseEntity<CurrentUserDto> getCurrentUser() {
-        throw new UnsupportedOperationException();
+        return ResponseEntity.ok(CurrentUserMapper.toDto(auth.currentUser()));
     }
 
     private static AuthResponseDto toResponse(AuthResult result) {

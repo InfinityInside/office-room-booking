@@ -3,7 +3,7 @@ package io.github.infinityinside.roombooking.error;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.infinityinside.roombooking.IntegrationTest;
-import io.github.infinityinside.roombooking.security.TestTokens;
+import io.github.infinityinside.roombooking.security.TestUsers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -17,11 +17,11 @@ import org.springframework.transaction.annotation.Transactional;
 class ApiExceptionHandlerTests {
 
     @Autowired private MockMvcTester mvc;
-    @Autowired private TestTokens tokens;
+    @Autowired private TestUsers testUsers;
 
     @Test
     void notFoundBecomes404Problem() {
-        assertThat(mvc.get().uri("/api/test/errors/not-found").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/test/errors/not-found").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .bodyJson()
@@ -37,7 +37,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void conflictBecomes409Problem() {
-        assertThat(mvc.get().uri("/api/test/errors/conflict").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/test/errors/conflict").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.CONFLICT)
                 .bodyJson()
                 .isLenientlyEqualTo("""
@@ -47,7 +47,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void invalidBodyBecomes422WithFieldErrors() {
-        assertThat(mvc.post().uri("/api/test/errors/validated").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1))
+        assertThat(mvc.post().uri("/api/test/errors/validated").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("""
                                 { "name": "", "capacity": 0 }
@@ -62,7 +62,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void malformedJsonBecomes400Problem() {
-        assertThat(mvc.post().uri("/api/test/errors/validated").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1))
+        assertThat(mvc.post().uri("/api/test/errors/validated").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{ not json"))
                 .hasStatus(HttpStatus.BAD_REQUEST)
@@ -71,21 +71,21 @@ class ApiExceptionHandlerTests {
 
     @Test
     void unknownRouteBecomes404Problem() {
-        assertThat(mvc.get().uri("/api/does-not-exist").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/does-not-exist").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.NOT_FOUND)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
     @Test
     void wrongMethodBecomes405Problem() {
-        assertThat(mvc.put().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.put().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.METHOD_NOT_ALLOWED)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON);
     }
 
     @Test
     void uniqueViolationBecomes409WithAFriendlyMessage() {
-        assertThat(mvc.post().uri("/api/test/errors/duplicate-equipment-code").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.post().uri("/api/test/errors/duplicate-equipment-code").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.CONFLICT)
                 .bodyJson()
                 .isLenientlyEqualTo("""
@@ -95,7 +95,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void foreignKeyViolationBecomes409() {
-        assertThat(mvc.post().uri("/api/test/errors/delete-equipment-in-use").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.post().uri("/api/test/errors/delete-equipment-in-use").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.CONFLICT)
                 .bodyJson()
                 .isLenientlyEqualTo("""
@@ -105,7 +105,7 @@ class ApiExceptionHandlerTests {
 
     @Test
     void unexpectedErrorsBecome500WithoutInternals() {
-        assertThat(mvc.get().uri("/api/test/errors/unexpected").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/test/errors/unexpected").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatus(HttpStatus.INTERNAL_SERVER_ERROR)
                 .hasContentType(MediaType.APPLICATION_PROBLEM_JSON)
                 .bodyText()

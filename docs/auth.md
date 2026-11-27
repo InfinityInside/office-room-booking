@@ -18,6 +18,12 @@ when the running backend is switched.
 The token only identifies the user. On every request the backend loads the user
 from the database, so deactivating a user or changing their grants takes effect immediately.
 
+## Authorization
+
+- Authorities are the codes of the user's **active** grants.
+- Every endpoint under `/admin` requires the `ADMIN` grant; other rules are described per endpoint in the contract.
+- A token whose user no longer exists or is deactivated is rejected with 401.
+
 ## Passwords
 
 See [database/README.md](../database/README.md#password-hashes).

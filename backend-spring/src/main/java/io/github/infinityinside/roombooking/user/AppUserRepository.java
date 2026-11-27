@@ -19,4 +19,7 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     @EntityGraph(attributePaths = "grants")
     @Query("select u from AppUser u where lower(u.email) = lower(:email)")
     Optional<AppUser> findWithGrantsByEmail(String email);
+
+    @EntityGraph(attributePaths = "grants")
+    Optional<AppUser> findWithGrantsById(Long id);
 }

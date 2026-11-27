@@ -8,6 +8,8 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import javax.crypto.spec.SecretKeySpec;
+
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -22,10 +24,11 @@ import org.springframework.security.oauth2.jwt.NimbusJwtEncoder;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 @IntegrationTest
+@Transactional
 class SecurityTests {
 
     @Autowired private MockMvcTester mvc;
-    @Autowired private TestTokens tokens;
+    @Autowired private TestUsers testUsers;
     @Autowired private JwtEncoder encoder;
 
     @Test
@@ -42,7 +45,7 @@ class SecurityTests {
 
     @Test
     void validTokensAreAccepted() {
-        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatusOk();
     }
 

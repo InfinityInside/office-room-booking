@@ -3,6 +3,7 @@ package io.github.infinityinside.roombooking.auth;
 import io.github.infinityinside.roombooking.error.ConflictException;
 import io.github.infinityinside.roombooking.error.InvalidInputException;
 import io.github.infinityinside.roombooking.error.UnauthorizedException;
+import io.github.infinityinside.roombooking.security.AuthenticatedUser;
 import io.github.infinityinside.roombooking.security.TokenService;
 import io.github.infinityinside.roombooking.security.TokenService.IssuedToken;
 import io.github.infinityinside.roombooking.user.AppUser;
@@ -27,16 +28,18 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TokenService tokens;
     private final Clock clock;
+    private final AuthenticatedUser authenticatedUser;
 
     /** Compared against when the email doesn't exist, so that case takes as long as a wrong password. */
     private final String dummyHash;
 
-    public AuthService(AppUserRepository users, PasswordEncoder passwordEncoder, TokenService tokens, Clock clock) {
+    public AuthService(AppUserRepository users, PasswordEncoder passwordEncoder, TokenService tokens, Clock clock, AuthenticatedUser authenticatedUser) {
         this.users = users;
         this.passwordEncoder = passwordEncoder;
         this.tokens = tokens;
         this.clock = clock;
         this.dummyHash = passwordEncoder.encode("dummy password for unknown emails");
+        this.authenticatedUser = authenticatedUser;
     }
 
     @Transactional
@@ -72,6 +75,12 @@ public class AuthService {
             throw new UnauthorizedException("This account has been deactivated.");
         }
         return new AuthResult(user, tokens.issueFor(user.getId()));
+    }
+
+    @Transactional(readOnly = true)
+    public AppUser currentUser() {
+        return users.findWithGrantsById(authenticatedUser.id())
+                .orElseThrow(() -> new UnauthorizedException("Log in to continue."));
     }
 
     private static boolean fitsBcrypt(String password) {

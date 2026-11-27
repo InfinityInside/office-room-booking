@@ -7,7 +7,7 @@ import io.github.infinityinside.roombooking.room.Room;
 import io.github.infinityinside.roombooking.room.RoomRepository;
 import java.util.Set;
 
-import io.github.infinityinside.roombooking.security.TestTokens;
+import io.github.infinityinside.roombooking.security.TestUsers;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,13 +27,15 @@ class EquipmentTypeAdminTests {
     @Autowired private MockMvcTester mvc;
     @Autowired private EquipmentTypeRepository equipmentTypes;
     @Autowired private RoomRepository rooms;
-    @Autowired private TestTokens tokens;
+    @Autowired private TestUsers testUsers;
 
     private EquipmentType projector;
+    private String adminToken;
 
     @BeforeEach
-    void createProjector() {
+    void setUp() {
         projector = equipmentTypes.save(new EquipmentType("PROJECTOR", "Projector"));
+        adminToken = testUsers.bearerForNewAdmin();
     }
 
     // Create
@@ -128,7 +130,7 @@ class EquipmentTypeAdminTests {
 
     @Test
     void deletesAnUnusedType() {
-        assertThat(mvc.delete().uri(BASE + "/" + projector.getId()).header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.delete().uri(BASE + "/" + projector.getId()).header(HttpHeaders.AUTHORIZATION, adminToken))
                 .hasStatus(HttpStatus.NO_CONTENT);
 
         assertThat(equipmentTypes.findById(projector.getId())).isEmpty();
@@ -140,7 +142,7 @@ class EquipmentTypeAdminTests {
         room.update("Aurora", 1, 6, "", true, Set.of(projector), Set.of());
         rooms.saveAndFlush(room);
 
-        assertThat(mvc.delete().uri(BASE + "/" + projector.getId()).header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.delete().uri(BASE + "/" + projector.getId()).header(HttpHeaders.AUTHORIZATION, adminToken))
                 .hasStatus(HttpStatus.CONFLICT)
                 .bodyJson()
                 .isLenientlyEqualTo("""
@@ -150,17 +152,17 @@ class EquipmentTypeAdminTests {
 
     @Test
     void deletingAnUnknownTypeIs404() {
-        assertThat(mvc.delete().uri(BASE + "/999999").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.delete().uri(BASE + "/999999").header(HttpHeaders.AUTHORIZATION, adminToken))
                 .hasStatus(HttpStatus.NOT_FOUND);
     }
 
     // Helpers
 
     private MockMvcRequestBuilder post(String uri, String json) {
-        return mvc.post().uri(uri).header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)).contentType(MediaType.APPLICATION_JSON).content(json);
+        return mvc.post().uri(uri).header(HttpHeaders.AUTHORIZATION, adminToken).contentType(MediaType.APPLICATION_JSON).content(json);
     }
 
     private MockMvcRequestBuilder patch(String uri, String json) {
-        return mvc.patch().uri(uri).header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)).contentType(MediaType.APPLICATION_JSON).content(json);
+        return mvc.patch().uri(uri).header(HttpHeaders.AUTHORIZATION, adminToken).contentType(MediaType.APPLICATION_JSON).content(json);
     }
 }

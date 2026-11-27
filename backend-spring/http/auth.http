@@ -15,3 +15,14 @@ Content-Type: application/json
 ### Use the token
 GET http://localhost:8080/api/equipment-types
 Authorization: Bearer {{token}}
+
+### Who am I?
+GET http://localhost:8080/api/auth/me
+Authorization: Bearer {{token}}
+
+### Admin-only: works for anna (ADMIN), 403 for tom
+POST http://localhost:8080/api/admin/equipment-types
+Authorization: Bearer {{token}}
+Content-Type: application/json
+
+{ "code": "SPEAKERPHONE", "name": "Speakerphone" }

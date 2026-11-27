@@ -3,7 +3,7 @@ package io.github.infinityinside.roombooking.equipment;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.github.infinityinside.roombooking.IntegrationTest;
-import io.github.infinityinside.roombooking.security.TestTokens;
+import io.github.infinityinside.roombooking.security.TestUsers;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -21,14 +21,14 @@ class EquipmentTypeControllerTests {
     @Autowired
     private EquipmentTypeRepository equipmentTypes;
     @Autowired
-    private TestTokens tokens;
+    private TestUsers testUsers;
 
     @Test
     void listsEquipmentTypesSortedByName() {
         equipmentTypes.save(new EquipmentType("WHITEBOARD", "Whiteboard"));
         equipmentTypes.save(new EquipmentType("PROJECTOR", "Projector"));
 
-        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .hasStatusOk()
                 .hasContentTypeCompatibleWith(MediaType.APPLICATION_JSON)
                 .bodyJson()
@@ -39,7 +39,7 @@ class EquipmentTypeControllerTests {
                         ]
                         """);
 
-        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1)))
+        assertThat(mvc.get().uri("/api/equipment-types").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser()))
                 .bodyJson()
                 .extractingPath("$[*].code")
                 .asArray()
@@ -48,7 +48,7 @@ class EquipmentTypeControllerTests {
 
     @Test
     void servesTheApiOnlyUnderTheApiPrefix() {
-        assertThat(mvc.get().uri("/equipment-types").header(HttpHeaders.AUTHORIZATION, tokens.bearer(1))).hasStatus(HttpStatus.NOT_FOUND);
+        assertThat(mvc.get().uri("/equipment-types").header(HttpHeaders.AUTHORIZATION, testUsers.bearerForNewUser())).hasStatus(HttpStatus.NOT_FOUND);
     }
 
     @Test

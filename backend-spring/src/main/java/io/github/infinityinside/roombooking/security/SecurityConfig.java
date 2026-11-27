@@ -1,5 +1,6 @@
 package io.github.infinityinside.roombooking.security;
 
+import io.github.infinityinside.roombooking.grant.SystemGrants;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -15,16 +16,17 @@ import org.springframework.security.web.SecurityFilterChain;
 class SecurityConfig {
 
     @Bean
-    SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityProblemHandler problems) {
+    SecurityFilterChain securityFilterChain(HttpSecurity http, SecurityProblemHandler problems, UserJwtAuthenticationConverter userConverter) {
         return http
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(requests -> requests
                         .requestMatchers(HttpMethod.POST, "/api/auth/register", "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/actuator/health").permitAll()
+                        .requestMatchers("/api/admin/**").hasAuthority(SystemGrants.ADMIN)
                         .anyRequest().authenticated())
                 .oauth2ResourceServer(resourceServer -> resourceServer
-                        .jwt(Customizer.withDefaults())
+                        .jwt(jwt -> jwt.jwtAuthenticationConverter(userConverter))
                         .authenticationEntryPoint(problems)
                         .accessDeniedHandler(problems))
                 .exceptionHandling(exceptions -> exceptions
